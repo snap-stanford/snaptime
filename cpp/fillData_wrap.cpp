@@ -5065,23 +5065,19 @@ SWIGINTERN PyObject *_wrap_FillData_createAndFillData(PyObject *SWIGUNUSEDPARM(s
   std::string arg2 ;
   long long arg3 ;
   int arg4 ;
-  int arg5 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   long long val3 ;
   int ecode3 = 0 ;
   int val4 ;
   int ecode4 = 0 ;
-  int val5 ;
-  int ecode5 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
   PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
   Eigen::MatrixXd result;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOO:FillData_createAndFillData",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:FillData_createAndFillData",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_FillData, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "FillData_createAndFillData" "', argument " "1"" of type '" "FillData *""'"); 
@@ -5106,12 +5102,7 @@ SWIGINTERN PyObject *_wrap_FillData_createAndFillData(PyObject *SWIGUNUSEDPARM(s
     SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "FillData_createAndFillData" "', argument " "4"" of type '" "int""'");
   } 
   arg4 = static_cast< int >(val4);
-  ecode5 = SWIG_AsVal_int(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "FillData_createAndFillData" "', argument " "5"" of type '" "int""'");
-  } 
-  arg5 = static_cast< int >(val5);
-  result = (arg1)->createAndFillData(arg2,arg3,arg4,arg5);
+  result = (arg1)->createAndFillData(arg2,arg3,arg4);
   {
     ConvertFromEigenToNumPyMatrix<Eigen::MatrixXd>(&resultobj, &result);
   }

@@ -16,19 +16,21 @@ import time
 import os
 tf.python.control_flow_ops = tf
 
-def test_LSTM(input_directory,model,test_indices,sum,sumsq,obj,interval,X_cols,init_epoch,timeslice,train_indices=None):
+def test_LSTM(input_directory,model,test_indices,sum,sumsq,obj,interval,X_cols,timeslice,granularity,train_indices=None):
     files = os.listdir(input_directory)
     y_true_test = []
     y_pred_test = []
     y_true_train = []
     y_pred_train = []
     files = [file for file in os.listdir(input_directory)]
+    epoch = datetime.utcfromtimestamp(0)
     
     for i in xrange(len(files)):
         file,key = files[i],files[i]
+        init_epoch = long((datetime.strptime('_'.join(files[global_file_idx].split('_')[:2]),'%Y%m%d_%H') - epoch).total_seconds()*1000)
         if key not in test_indices:
             continue
-        data = obj.createAndFillData(os.path.join(input_directory,file),init_epoch,interval,timeslice)[:,X_cols]
+        data = obj.createAndFillData(os.path.join(input_directory,file),init_epoch,interval,timeslice,granularity)[:,X_cols]
         for j in xrange(data.shape[1]):
             if sumsq[j] != 0:
                 data[:,j] = (data[:,j]-sum[j])/sumsq[j]
@@ -45,9 +47,10 @@ def test_LSTM(input_directory,model,test_indices,sum,sumsq,obj,interval,X_cols,i
     if train_indices != None:
         for i in xrange(len(files)):
             file,key = files[i],files[i]
+            init_epoch = long((datetime.strptime('_'.join(files[global_file_idx].split('_')[:2]),'%Y%m%d_%H') - epoch).total_seconds()*1000)
             if keys not in train_indices:
                 continue
-            data = obj.createAndFillData(os.path.join(input_directory,file),init_epoch,interval,timeslice)[:,X_cols]
+            data = obj.createAndFillData(os.path.join(input_directory,file),init_epoch,interval,timeslice,granularity)[:,X_cols]
             for j in xrange(data.shape[1]):
                 if sumsq[j] != 0:
                     data[:,j] = (data[:,j]-sum[j])/sumsq[j]
@@ -67,14 +70,15 @@ def test_LSTM(input_directory,model,test_indices,sum,sumsq,obj,interval,X_cols,i
         train_score = roc_auc_score([y_true_train[i][1] for i in xrange(len(y_true_train))],[y_pred_train[i][1] for i in xrange(len(y_pred_train))])
     else:
         fpr_t,tpr_t,thres_t,train_score=None,None,None,None,None
-    return fpr,tpr,thres,fpr_t,tpr_t,thres_t
+    return fpr,tpr,thres,test_score,fpr_t,tpr_t,thres_t,train_score
 
-def train_LSTM(input_directory,train_indices,buffering,sum,sumsq,LSTM_model,iterations,obj,interval,X_cols,init_epoch,timeslice):
+def train_LSTM(input_directory,train_indices,buffering,sum,sumsq,LSTM_model,iterations,obj,interval,X_cols,timeslice,granularity):
     global_X = []
     global_Y = []
     global_idx = -1
     global_file_idx = -1
     files = [file for file in os.listdir(input_directory)]
+    epoch = datetime.utcfromtimestamp(0)
     def train_generator():
         global_file_idx = -1
         global_idx = -1
@@ -88,9 +92,10 @@ def train_LSTM(input_directory,train_indices,buffering,sum,sumsq,LSTM_model,iter
                 global_Y = []
                 while files[global_file_idx] not in train_indices:
                     global_file_idx = (global_file_idx + 1)%len(files)
+                init_epoch = long((datetime.strptime('_'.join(files[global_file_idx].split('_')[:2]),'%Y%m%d_%H') - epoch).total_seconds()*1000)
                 positives = train_indices[files[global_file_idx]]['positive']
                 negatives = train_indices[files[global_file_idx]]['negative']
-                data = obj.createAndFillData(os.path.join(input_directory,file),init_epoch,interval,timeslice)[:,X_cols]
+                data = obj.createAndFillData(os.path.join(input_directory,files[global_file_idx]),init_epoch,interval,timeslice,granularity)[:,X_cols]
                 if len(positives) > 0 and len(negatives) > 0:
                     global_Y = np.concatenate(([[0,1] for idx in positives],[[1,0] for idx in negatives]))
                 elif len(positives) > 0:
@@ -112,7 +117,7 @@ def train_LSTM(input_directory,train_indices,buffering,sum,sumsq,LSTM_model,iter
     LSTM_model.fit_generator(train_generator(),buffering,iterations)
     return LSTM_model
 
-def run_LSTM(input_directory,X_cols,Y_cols,interval,timeslice,y_differentiator,buffering.LSTM_model,iterations):
+def run_LSTM(input_directory,X_cols,Y_cols,interval,timeslice,granularity,y_differentiator,buffering,LSTM_model,iterations):
 
     #prepare training and test indices and preprocess the data
     data_train = {}
@@ -127,7 +132,7 @@ def run_LSTM(input_directory,X_cols,Y_cols,interval,timeslice,y_differentiator,b
     total = 0
     for file in files:
         init_epoch = long((datetime.strptime('_'.join(file.split('_')[:2]),'%Y%m%d_%H') - epoch).total_seconds()*1000)
-        data = obj.createAndFillData(os.path.join(input_directory,file),init_epoch,interval,timeslice)
+        data = obj.createAndFillData(os.path.join(input_directory,file),init_epoch,interval,timeslice,granularity)
         full_data_Y = data[:,Y_cols]
         full_data_X = data[:,X_cols]
         total += len(full_data_X)
@@ -142,7 +147,7 @@ def run_LSTM(input_directory,X_cols,Y_cols,interval,timeslice,y_differentiator,b
         neg_idx = []
         while i + interval+lookahead - 1 < len(full_data_Y):
             pointer = 1
-            while pointer <= lookahead and y_differentiator(full_data_Y[i+interval-1+pointer],:]) == False:
+            while pointer <= lookahead and y_differentiator(full_data_Y[i+interval-1+pointer]) == False:
                 pointer += 1
             if pointer <= lookahead:
                 for j in xrange(i,i+pointer):
@@ -177,7 +182,7 @@ def run_LSTM(input_directory,X_cols,Y_cols,interval,timeslice,y_differentiator,b
     sum,sumsq = np.array(sum),np.array(sumsq)
     sum /= total
     sumsq = (sumsq/total - sum**2)**0.5
-    #TODO
     #train and test
-    
+    model = train_LSTM(input_directory,data_train,buffering,sum,sumsq,LSTM_model,iterations,obj,interval,X_cols,timeslice,granularity)
+    fpr,tpr,thres,test_score,fpr_t,tpr_t,thres_t,test_score = test_LSTM(input_directory,model,data_test,sum,sumsq,obj,interval,X_cols,timeslice,granularity,train_indices)
 

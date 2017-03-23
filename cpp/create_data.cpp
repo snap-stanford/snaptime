@@ -39,8 +39,8 @@ void CreateData::parseData(std::string filename) {
     }
 }
 
-Eigen::MatrixXd CreateData::fillData(long long initialTimestamp, int duration) {
-    int size = static_cast<int>(duration/100);
+Eigen::MatrixXd CreateData::fillData(long long initialTimestamp, int duration, int granularity) {
+    int size = static_cast<int>(duration/granularity);
     Eigen::MatrixXd filledData(size,signal_count+1);
     std::vector<struct heapData> h_data;
     for(int i = 0 ; i < signal_values.Len(); ++i){
@@ -56,7 +56,7 @@ Eigen::MatrixXd CreateData::fillData(long long initialTimestamp, int duration) {
         runningVector.setZero(1,signal_count);
         heapData currentMin = h_data.front();
         int count = 0;
-        for(long long t = initialTimestamp ; t < initialTimestamp + duration; t += 100){
+        for(long long t = initialTimestamp ; t < initialTimestamp + duration; t += granularity){
             if (t == static_cast<long long>(signal_values[currentMin.signal_index][currentMin.signal_position].Val1.Val)) { //update values
                 count++;
                 filledData(count-1,0) = t;

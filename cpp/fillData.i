@@ -1,5 +1,3 @@
-%module fillData
-
 %{
     #define SWIG_FILE_WITH_INIT
     #include "fillData.hpp"

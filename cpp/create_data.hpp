@@ -58,6 +58,6 @@ class CreateData
             Save(FOut);
         }
         void parseData(std::string);
-        Eigen::MatrixXd fillData(long long,int);
+        Eigen::MatrixXd fillData(long long,int,int);
 };
 #endif

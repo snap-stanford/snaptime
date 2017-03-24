@@ -5,5 +5,5 @@
 class FillData
 {
     public:
-        Eigen::MatrixXd createAndFillData(std::string,long long,int);
+        Eigen::MatrixXd createAndFillData(std::string,long long,int,int);
 };

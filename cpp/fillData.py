@@ -7,6 +7,10 @@
 
 
 from sys import version_info
+if version_info >= (3,0,0):
+    new_instancemethod = lambda func, inst, cls: _fillData.SWIG_PyInstanceMethod_New(func)
+else:
+    from new import instancemethod as new_instancemethod
 if version_info >= (2,6,0):
     def swig_import_helper():
         from os.path import dirname
@@ -67,51 +71,50 @@ except AttributeError:
     _newclass = 0
 
 
-class SwigPyIterator(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, SwigPyIterator, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, SwigPyIterator, name)
+def _swig_setattr_nondynamic_method(set):
+    def set_attr(self,name,value):
+        if (name == "thisown"): return self.this.own(value)
+        if hasattr(self,name) or (name == "this"):
+            set(self,name,value)
+        else:
+            raise AttributeError("You cannot add attributes to %s" % self)
+    return set_attr
+
+
+class SwigPyIterator(object):
+    thisown = _swig_property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc='The membership flag')
     def __init__(self, *args, **kwargs): raise AttributeError("No constructor defined - class is abstract")
     __repr__ = _swig_repr
     __swig_destroy__ = _fillData.delete_SwigPyIterator
-    __del__ = lambda self : None;
-    def value(self): return _fillData.SwigPyIterator_value(self)
-    def incr(self, n=1): return _fillData.SwigPyIterator_incr(self, n)
-    def decr(self, n=1): return _fillData.SwigPyIterator_decr(self, n)
-    def distance(self, *args): return _fillData.SwigPyIterator_distance(self, *args)
-    def equal(self, *args): return _fillData.SwigPyIterator_equal(self, *args)
-    def copy(self): return _fillData.SwigPyIterator_copy(self)
-    def next(self): return _fillData.SwigPyIterator_next(self)
-    def __next__(self): return _fillData.SwigPyIterator___next__(self)
-    def previous(self): return _fillData.SwigPyIterator_previous(self)
-    def advance(self, *args): return _fillData.SwigPyIterator_advance(self, *args)
-    def __eq__(self, *args): return _fillData.SwigPyIterator___eq__(self, *args)
-    def __ne__(self, *args): return _fillData.SwigPyIterator___ne__(self, *args)
-    def __iadd__(self, *args): return _fillData.SwigPyIterator___iadd__(self, *args)
-    def __isub__(self, *args): return _fillData.SwigPyIterator___isub__(self, *args)
-    def __add__(self, *args): return _fillData.SwigPyIterator___add__(self, *args)
-    def __sub__(self, *args): return _fillData.SwigPyIterator___sub__(self, *args)
     def __iter__(self): return self
+SwigPyIterator.value = new_instancemethod(_fillData.SwigPyIterator_value,None,SwigPyIterator)
+SwigPyIterator.incr = new_instancemethod(_fillData.SwigPyIterator_incr,None,SwigPyIterator)
+SwigPyIterator.decr = new_instancemethod(_fillData.SwigPyIterator_decr,None,SwigPyIterator)
+SwigPyIterator.distance = new_instancemethod(_fillData.SwigPyIterator_distance,None,SwigPyIterator)
+SwigPyIterator.equal = new_instancemethod(_fillData.SwigPyIterator_equal,None,SwigPyIterator)
+SwigPyIterator.copy = new_instancemethod(_fillData.SwigPyIterator_copy,None,SwigPyIterator)
+SwigPyIterator.next = new_instancemethod(_fillData.SwigPyIterator_next,None,SwigPyIterator)
+SwigPyIterator.__next__ = new_instancemethod(_fillData.SwigPyIterator___next__,None,SwigPyIterator)
+SwigPyIterator.previous = new_instancemethod(_fillData.SwigPyIterator_previous,None,SwigPyIterator)
+SwigPyIterator.advance = new_instancemethod(_fillData.SwigPyIterator_advance,None,SwigPyIterator)
+SwigPyIterator.__eq__ = new_instancemethod(_fillData.SwigPyIterator___eq__,None,SwigPyIterator)
+SwigPyIterator.__ne__ = new_instancemethod(_fillData.SwigPyIterator___ne__,None,SwigPyIterator)
+SwigPyIterator.__iadd__ = new_instancemethod(_fillData.SwigPyIterator___iadd__,None,SwigPyIterator)
+SwigPyIterator.__isub__ = new_instancemethod(_fillData.SwigPyIterator___isub__,None,SwigPyIterator)
+SwigPyIterator.__add__ = new_instancemethod(_fillData.SwigPyIterator___add__,None,SwigPyIterator)
+SwigPyIterator.__sub__ = new_instancemethod(_fillData.SwigPyIterator___sub__,None,SwigPyIterator)
 SwigPyIterator_swigregister = _fillData.SwigPyIterator_swigregister
 SwigPyIterator_swigregister(SwigPyIterator)
 
-class FillData(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, FillData, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, FillData, name)
+class FillData(object):
+    thisown = _swig_property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc='The membership flag')
     __repr__ = _swig_repr
-    def createAndFillData(self, *args): return _fillData.FillData_createAndFillData(self, *args)
     def __init__(self): 
-        this = _fillData.new_FillData()
-        try: self.this.append(this)
-        except: self.this = this
+        _fillData.FillData_swiginit(self,_fillData.new_FillData())
     __swig_destroy__ = _fillData.delete_FillData
-    __del__ = lambda self : None;
+FillData.createAndFillData = new_instancemethod(_fillData.FillData_createAndFillData,None,FillData)
 FillData_swigregister = _fillData.FillData_swigregister
 FillData_swigregister(FillData)
 
-# This file is compatible with both classic and new-style classes.
 
 

@@ -145,11 +145,12 @@ if swubuntu:
 
 # check for an alternative Python user directory
 user_install = sys_install
-for p in sys.path:
-    n = p.find(instdir)
-    if n > 0:
-        user_install = os.path.join(p[:n],instdir)
-        break
+if (user_install == []):
+    for p in sys.path:
+        n = p.find(instdir)
+        if n > 0:
+            user_install = os.path.join(p[:n],instdir)
+            break
 
 # if Mac OS X, get a path for the Python dynamic library
 dynlib_path = None

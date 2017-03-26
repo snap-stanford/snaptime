@@ -41,7 +41,7 @@ void CreateData::parseData(std::string filename) {
 
 Eigen::MatrixXd CreateData::fillData(long long initialTimestamp, int duration, int granularity) {
     int size = static_cast<int>(duration/granularity);
-    Eigen::MatrixXd filledData(size,signal_count+1);
+    Eigen::MatrixXd filledData(size,signal_count);
     std::vector<struct heapData> h_data;
     for(int i = 0 ; i < signal_values.Len(); ++i){
         signal_count++;
@@ -52,14 +52,11 @@ Eigen::MatrixXd CreateData::fillData(long long initialTimestamp, int duration, i
     if(h_data.size() > 0){
         std::make_heap(h_data.begin(),h_data.end(),[this](struct heapData& a, struct heapData& b){return static_cast<long long>(signal_values[a.signal_index][a.signal_position].Val1.Val) > static_cast<long long>(signal_values[b.signal_index][b.signal_position].Val1.Val);});
         Eigen::MatrixXd runningVector(1,signal_count);
-        filledData.setZero(size,signal_count+1);
+        filledData.setZero(size,signal_count);
         runningVector.setZero(1,signal_count);
         heapData currentMin = h_data.front();
-        int count = 0;
         for(long long t = initialTimestamp ; t < initialTimestamp + duration; t += granularity){
             if (t == static_cast<long long>(signal_values[currentMin.signal_index][currentMin.signal_position].Val1.Val)) { //update values
-                count++;
-                filledData(count-1,0) = t;
                 while(static_cast<long long>(signal_values[currentMin.signal_index][currentMin.signal_position].Val1.Val) == t && h_data.size() > 0){
                     runningVector(0,currentMin.signal_index) = signal_values[currentMin.signal_index][currentMin.signal_position].Val2.Val;
                     std::pop_heap(h_data.begin(),h_data.end(),[this](struct heapData& a, struct heapData& b){return static_cast<long long>(signal_values[a.signal_index][a.signal_position].Val1.Val) > static_cast<long long>(signal_values[b.signal_index][b.signal_position].Val1.Val);});h_data.pop_back();
@@ -71,10 +68,10 @@ Eigen::MatrixXd CreateData::fillData(long long initialTimestamp, int duration, i
                         currentMin = h_data.front();
                     }
                 }
-                filledData.block(count-1,1,1,signal_count) = runningVector;
             }
+            int count = static_cast<int>((t-initialTimestamp)/granularity);
+            filledData.block(count,0,1,signal_count) = runningVector;
         }
-        filledData.conservativeResize(count,signal_count+1);
     }
     return filledData;
 }

@@ -21,6 +21,7 @@ class Solver
         std::vector<Eigen::MatrixXd> S;
         std::vector<std::vector<Eigen::MatrixXd> > assignments;
         std::vector<int> current_optimal;
+        double p;
         Eigen::MatrixXd LLE;
 
         int sweep_length; //contiguous points assigned to the empty cluster
@@ -31,12 +32,15 @@ class Solver
         Eigen::MatrixXd lambda; //sparseness matrix
         int n; //number of sensors
         int w; //window size
+        double e_abs; //convergence param
+        double e_rel; //convergence param
+        int ADMM_iter;
         void computeLLE();
         void Estep();
         void Mstep();
 
     public:
-        Solver(int sweep_length, int K, double beta, double rho, Eigen::MatrixXd data, Eigen::MatrixXd lambda, int n, int w,std::vector<Eigen::MatrixXd> init_mu,std::vector<Eigen::MatrixXd> init_theta) {
+        Solver(int sweep_length, int K, double beta, double rho, Eigen::MatrixXd data, Eigen::MatrixXd lambda, int n, int w,std::vector<Eigen::MatrixXd> init_mu,std::vector<Eigen::MatrixXd> init_theta, double e_abs, double e_rel, int ADMM_iter) {
             this->sweep_length = sweep_length;
             this->K = K;
             this->beta = beta;
@@ -45,6 +49,7 @@ class Solver
             this->lambda = lambda;
             this->n = n;
             this->w = w;
+            this->p = sqrt(n*w*1.0*(n*w+1)/2);
             for(int i = 0 ; i < K ;++i){
                 Theta.push_back(init_theta[i]);
                 Eigen::MatrixXd mat(n*w,n*w);
@@ -57,6 +62,9 @@ class Solver
                 vec.clear();
                 assignments.push_back(vec);
             }
+            this->e_abs = e_abs;
+            this->e_rel = e_rel;
+            this->ADMM_iter = ADMM_iter;
             current_optimal.clear();
             LLE = Eigen::MatrixXd(data.rows(),K);
             LLE.setZero(data.rows(),K);

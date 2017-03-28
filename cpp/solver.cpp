@@ -70,13 +70,11 @@ void Solver::Estep() {
         }
     }
     for(int i = 0 ; i < K ; ++i){
-        std::cout << "count " << i << " " << cluster_count[i] << "\n";
         int j = 0;
         if (cluster_count[i] == 0) {
             //pick a segment from the largest cluster and reassign it to the empty cluster
             while (j < current_optimal.size() - sweep_length) {
                 if (current_optimal[j] == largest_cluster) {
-                    std::cout << "cluster " << i << " " << j << " " << largest_cluster << "\n";
                     for(int k = j ; k < j + sweep_length;++k) {
                         current_optimal[k] = i;
                     }
@@ -119,12 +117,12 @@ void Solver::Estep() {
 void Solver::Mstep(){
     //for now keep the number of iterations fixed
     int counter = 0;
-    while(counter < 100){
-        #if defined(_OPENMP)
-        #pragma omp parallel for schedule(dynamic, 32)
-        #endif
-        for(int i = 0 ; i < K ;++i) {
-            if(assignments[i].size() > 0){
+    #if defined(_OPENMP)
+    #pragma omp parallel for schedule(dynamic, 32)
+    #endif
+    for(int i = 0 ; i < K ;++i) {
+        if(assignments[i].size() > 0){
+            while(counter < ADMM_iter){
                 //theta update
                 Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> decomp((Z[i]-U[i])/rho-S[i]);
                 Eigen::VectorXd eig = decomp.eigenvalues();
@@ -139,6 +137,7 @@ void Solver::Mstep(){
                 Eigen::MatrixXd update(n,n);
                 Eigen::MatrixXd updateS(n,n);
                 Eigen::MatrixXd updateQ(n,n);
+                auto old_Z = Z[i];
                 for(int j = 0 ; j < w; ++j){
                     updateQ.setZero(n,n);
                     updateS.setZero(n,n);
@@ -166,9 +165,17 @@ void Solver::Mstep(){
                 }
                 //U update
                 U[i] += Theta[i] - Z[i];
+                //check for convergence
+                double e_pri = p * e_abs + e_rel * std::max(Z[i].norm(),Theta[i].norm());
+                double e_dual = p * e_abs + e_rel * U[i].norm();
+                double r = (Theta[i]-Z[i]).norm();
+                double s = (old_Z-Z[i]).norm();
+                if(r <= e_pri && s <= e_dual){
+                    break;
+                }
+                counter++;
             }
         }
-        counter++;
     }
 }
 

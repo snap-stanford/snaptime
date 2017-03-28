@@ -21,7 +21,7 @@ model.add(Activation('sigmoid'))
 opt = Adam(lr=0.0015)
 model.compile(loss='binary_crossentropy',optimizer='adam',metrics=['accuracy'])
 
-fpr,tpr,thres,test_score,fpr_t,tpr_t,thres_t,train_score = LSTM_monolithic.run_LSTM('/lfs/local/0/abhisg/vw/tests/first_input',\
+fpr,tpr,thres,test_score,fpr_t,tpr_t,thres_t,train_score = LSTM_monolithic.run_LSTM('../data/vw',\
         np.array([i for i in xrange(1397) if i != 1174]),\
         np.array([1174]),\
         10,\

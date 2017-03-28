@@ -28,7 +28,12 @@ def test_LSTM(input_directory,model,test_indices,sum,sumsq,obj,interval,X_cols,t
                 data[:,j] = (data[:,j]-sum[j])/sumsq[j]
         positives = test_indices[file]['positive']
         negatives = test_indices[file]['negative']
-        X_test = np.concatenate(([data[idx:idx+interval,:] for idx in positives],[data[idx:idx+interval,:] for idx in negatives]))
+        if len(positives) > 0 and len(negatives) > 0:
+            X_test = np.concatenate(([data[idx:idx+interval,:] for idx in positives],[data[idx:idx+interval,:] for idx in negatives]))
+        elif len(positives) > 0:
+            X_test = np.array([data[idx:idx+interval,:] for idx in positives])
+        else:
+            X_test = np.array([data[idx:idx+interval,:] for idx in negatives])
         for idx in positives:
             y_true_test.append([0,1])
         for idx in negatives:
@@ -47,7 +52,12 @@ def test_LSTM(input_directory,model,test_indices,sum,sumsq,obj,interval,X_cols,t
                     data[:,j] = (data[:,j]-sum[j])/sumsq[j]
             positives = train_indices[file]['positive']
             negatives = train_indices[file]['negative']
-            X_test = np.concatenate(([data[idx:idx+interval,:] for idx in positives],[data[idx:idx+interval,:] for idx in negatives]))
+            if len(positives) > 0 and len(negatives) > 0:
+                X_test = np.concatenate(([data[idx:idx+interval,:] for idx in positives],[data[idx:idx+interval,:] for idx in negatives]))
+            elif len(positives) > 0:
+                X_test = np.array([data[idx:idx+interval,:] for idx in positives])
+            else:
+                X_test = np.array([data[idx:idx+interval,:] for idx in negatives])
             for idx in positives:
                 y_true_train.append([0,1])
             for idx in negatives:
@@ -89,11 +99,13 @@ def train_LSTM(input_directory,train_indices,buffering,sum,sumsq,LSTM_model,iter
                 data = obj.createAndFillData(os.path.join(input_directory,files[global_file_idx]),init_epoch,timeslice,granularity)[:,X_cols]
                 if len(positives) > 0 and len(negatives) > 0:
                     global_Y = np.concatenate(([[0,1] for idx in positives],[[1,0] for idx in negatives]))
+                    global_X = np.concatenate(([data[idx:idx+interval,:] for idx in positives],[data[idx:idx+interval,:] for idx in negatives]))
                 elif len(positives) > 0:
                     global_Y = np.array([[0,1] for idx in positives])
+                    global_X = np.array([data[idx:idx+interval,:] for idx in positives])
                 elif len(negatives) > 0:
                     global_Y = np.array([[1,0] for idx in negatives])
-                global_X = np.concatenate(([data[idx:idx+interval,:] for idx in positives],[data[idx:idx+interval,:] for idx in negatives]))
+                    global_X = np.array([data[idx:idx+interval,:] for idx in negatives])
                 order = np.arange(len(global_X))
                 np.random.shuffle(order)
                 global_X = global_X[order]

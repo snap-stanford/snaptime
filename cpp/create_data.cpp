@@ -1,7 +1,6 @@
 #include "create_data.hpp"
 #include <algorithm>
 
-
 void CreateData::parseData(std::string filename) {
     std::ifstream infile(filename);
     std::string line;

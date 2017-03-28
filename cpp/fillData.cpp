@@ -5,6 +5,5 @@ Eigen::MatrixXd FillData::createAndFillData(std::string filename,long long initi
     CreateData dt = CreateData();
     TFIn FIn (TStr(filename.c_str()));
     dt.Load(FIn);
-    //dt.parseData(filename);
     return dt.fillData(initialTimestamp,duration,granularity);
 }

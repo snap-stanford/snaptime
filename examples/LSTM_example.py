@@ -1,5 +1,4 @@
 from snaptime import LSTM_monolithic
-from fillData import *
 import numpy as np
 import cPickle as pickle
 from time import time

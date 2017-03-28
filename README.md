@@ -46,7 +46,7 @@ snaptime
 #### CONTRIBUTING TO THE CPP REPOSITORY
 1. Fork the git repository from [here](https://github.com/snap-stanford/snaptime)
 
-2. Go to the cpp folder.
+2. Go to the `cpp` directory.
 
     cd cpp
 
@@ -59,7 +59,13 @@ snaptime
 6. Follow instructions for making the build
 
 ### CONTRIBUTING TO THE PYTHON REPOSITORY
-1. Write your definitions inside a separate `.py` file in the `snaptime/` directory.
+1. Fork the git repository from [here](https://github.com/snap-stanford/snaptime)
+
+2. Go to the `snaptime` directory.
+
+    cd snaptime
+
+2. Write your definitions inside a separate `.py` file in the directory.
 
 2. Modify the `__init__.py` file inside the same directory.
 

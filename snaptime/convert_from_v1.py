@@ -6,7 +6,7 @@ from snaptime_helper import FillData
 
 def convertToST(filename,signal_mapping):
     """the input file is assumed to be in the format : datetime driver_id signal_name....
-    signal_mapping has the datatype for each VW signal"""
+    signal_mapping has the datatype for each signal"""
     epoch = datetime.datetime.utcfromtimestamp(0)
     init_epoch = (datetime.datetime.strptime('_'.join(filename.split('/')[-1].split('_')[:2]),'%Y%m%d_%H') - epoch).total_seconds()*1000
     #print init_epoch

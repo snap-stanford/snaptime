@@ -3,12 +3,31 @@ import numpy as np
 from collections import Counter
 from snaptime_helper import *
 from sklearn.mixture import GaussianMixture
+from datetime import datetime
 
-def cluster_data(data_file,timeinterval,beta,K,rho,lamb,n,w,iterations=20,sweep_length=5,e_abs=1e-4,e_rel=1e-4,ADMM_iter=100):
-    data = pd.read_csv(data_file,header=None).values
+def cluster_data(data_file,beta,K,rho,lamb,n,w,iterations=20,sweep_length=5,e_abs=1e-4,e_rel=1e-4,ADMM_iter=100,granularity=1000,timeslice=3600000):
+    """data_file : file containing timesteps x sensors data in snaptime format
+    beta - switching penalty
+    K - number of clusters
+    rho - regularisation penalty
+    lamb - sparsity parameter
+    n - number of sensors
+    w - window size
+    iterations - number of iterations of the algorithm
+    sweep length - contiguous segment length assigned to an empty cluster
+    e_abs,e_rel - ADMM parameters for convergence
+    ADMM_iter - max ADMM iterations
+    granularity - minimum difference between timestamps in milliseconds
+    timeslice - total length of timeseries in milliseconds
+    """
+    np.random.seed(1)
+    obj = FillData()
+    epoch = datetime.utcfromtimestamp(0)
+    init_epoch = long((datetime.strptime('_'.join(data_file.split('/')[-1].split('_')[:2]),'%Y%m%d_%H') - epoch).total_seconds()*1000)
+    data = obj.createAndFillData(data_file,init_epoch,timeslice,granularity)
     act = []
-    for i in xrange(len(data)-timeinterval+1):
-        act.append(np.hstack(data[i:i+timeinterval,:]))
+    for i in xrange(len(data)-w+1):
+        act.append(np.hstack(data[i:i+w,:]))
     act = np.array(act)
     init_mu = NumpyList()
     init_theta = NumpyList()
@@ -19,6 +38,4 @@ def cluster_data(data_file,timeinterval,beta,K,rho,lamb,n,w,iterations=20,sweep_
         init_theta.push_back(np.linalg.inv(gmm.covariances_[i]))
     obj = Solver(sweep_length,K,beta,rho,act,lamb,n,w,init_mu,init_theta,e_abs,e_rel,ADMM_iter)
     obj.Solve(iterations)
-    return obj.obtainAssignment()
-
-
+    return [obj.obtainAssignment()] + [obj.obtainTheta(i) for i in range(K)]

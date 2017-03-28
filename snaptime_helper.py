@@ -249,6 +249,7 @@ class FillData(object):
         _snaptime_helper.FillData_swiginit(self,_snaptime_helper.new_FillData())
     __swig_destroy__ = _snaptime_helper.delete_FillData
 FillData.createAndFillData = new_instancemethod(_snaptime_helper.FillData_createAndFillData,None,FillData)
+FillData.TSVToBin = new_instancemethod(_snaptime_helper.FillData_TSVToBin,None,FillData)
 FillData_swigregister = _snaptime_helper.FillData_swigregister
 FillData_swigregister(FillData)
 

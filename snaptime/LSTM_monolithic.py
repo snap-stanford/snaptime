@@ -120,8 +120,21 @@ def train_LSTM(input_directory,train_indices,buffering,sum,sumsq,LSTM_model,iter
     LSTM_model.fit_generator(train_generator(),buffering,iterations)
     return LSTM_model
 
-def run_LSTM(input_directory,X_cols,Y_cols,interval,lookahead,timeslice,granularity,y_differentiator,buffering,LSTM_model,iterations,imbalance=10):
-
+def run_LSTM(input_directory,X_cols,Y_cols,interval,lookahead,timeslice,granularity,y_differentiator,buffering,LSTM_model,iterations,imbalance=10,lastval=True):
+    """input directory - directory containing files in snaptime format
+    X_cols - columns with independent data
+    Y_cols - columns with dependent data
+    interval - window size
+    lookahead - time duration for prediction
+    timeslice - total length of timeseries in milliseconds
+    granularity - minimum difference between timestamps in milliseconds
+    y_differentiator : lambda function for specifying whether a certain y value maps to 1
+    buffering : LSTM batch size
+    LSTM_model : deep learning model
+    iterations : number of training iterations
+    imbalance : negative/positive imbalance ratio used in training
+    lastval - if True, consider only the last point of the lookahead window for generating an example
+    """
     #prepare training and test indices and preprocess the data
     data_train = {}
     data_test = {}
@@ -152,18 +165,15 @@ def run_LSTM(input_directory,X_cols,Y_cols,interval,lookahead,timeslice,granular
                 pointer += 1
             if pointer <= lookahead:
                 for j in xrange(i,i+pointer):
-                    if np.any(map(y_differentiator,full_data_Y[j:j+interval,:])): #j:j+interval,:])):
+                    if lastval == True and np.any(map(y_differentiator,full_data_Y[j:j+interval,:])):
                         continue
                     pos_idx.append(j)
-                    #print "positive",[indices[k] for k in xrange(j,j+interval)]
                 i += pointer+interval
                 while i < len(full_data_Y) and y_differentiator(full_data_Y[i]) == True:
                     i = i + 1
             else:
                 neg_idx.append(i)
-                #print "negative",[indices[k] for k in xrange(i,i+interval)]
                 i = i + 1
-            #print i,len(pos_idx),len(neg_idx)
         pos_idx = np.array(pos_idx)
         if len(pos_idx) == 0:
             continue

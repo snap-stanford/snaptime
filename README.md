@@ -1,7 +1,7 @@
 snaptime
 ============
 
-**The description and documentation of SnapVX are at ?.**
+**The description and documentation of SnapTime are at ?.**
 
 #### INSTALLATION
 1. Download the latest release [here](http://snap.stanford.edu/time/release/) for your environment. For example, for the linux environment, the file for version 0.0.1 would be snaptime-0.0.1-dev-centosrelease-x64-py2.7.tar.gz
@@ -19,6 +19,13 @@ snaptime
     ```
     from snaptime import *
     ```
+
+5. For obtaining the detailed function description for any module, use `help()`. For example, for getting the description for the TICC module, 
+    ```
+    from snaptime import TICC
+    help(TICC)
+    ```
+
 
 #### DEVELOPMENT
 1. Fork the git repository from [here](https://github.com/snap-stanford/snaptime)

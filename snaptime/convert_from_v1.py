@@ -4,9 +4,12 @@ import numpy as np
 import os
 from snaptime_helper import FillData
 
-def convertToST(filename,signal_mapping):
-    """the input file is assumed to be in the format : datetime driver_id signal_name....
-    signal_mapping has the datatype for each signal"""
+def convertToST(filename,signal_mapping,outputfile):
+    """
+    the input file is assumed to be in the format : datetime driver_id signal_name....
+    signal_mapping has the datatype for each signal
+    outputfile - location of the .st file without the extension
+    """
     epoch = datetime.datetime.utcfromtimestamp(0)
     init_epoch = (datetime.datetime.strptime('_'.join(filename.split('/')[-1].split('_')[:2]),'%Y%m%d_%H') - epoch).total_seconds()*1000
     #print init_epoch
@@ -21,7 +24,8 @@ def convertToST(filename,signal_mapping):
             line = line.strip().split()
             dtypes.append(line[1])
     #d.columns = [i for i in xrange(len(d.columns))]
-    outputfile = '.'.join(filename.split('.')[:-1])+'_converted.tsv'
+    binary_file = outputfile+'_converted.st'
+    outputfile = outputfile+'_converted.tsv'
     fp = open(outputfile,'w+')
     for i in xrange(2,len(d.columns)):
         if dtypes[i-2] == 'float' or dtypes[i-2] == 'bool':
@@ -34,7 +38,7 @@ def convertToST(filename,signal_mapping):
             fp.write(s+'\n')
     fp.close()
     obj = FillData();
-    obj.TSVtoBin(outputfile)
+    obj.TSVToBin(outputfile,binary_file)
     os.remove(outputfile)
     
 

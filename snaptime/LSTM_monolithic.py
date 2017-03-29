@@ -8,7 +8,7 @@ import time
 import os
 from snaptime_helper import FillData
 
-def test_LSTM(input_directory,model,test_indices,sum,sumsq,obj,interval,X_cols,timeslice,granularity,train_indices=None):
+def _test_LSTM(input_directory,model,test_indices,sum,sumsq,obj,interval,X_cols,timeslice,granularity,train_indices=None):
     files = os.listdir(input_directory)
     y_true_test = []
     y_pred_test = []
@@ -73,7 +73,7 @@ def test_LSTM(input_directory,model,test_indices,sum,sumsq,obj,interval,X_cols,t
         fpr_t,tpr_t,thres_t,train_score=None,None,None,None,None
     return fpr,tpr,thres,test_score,fpr_t,tpr_t,thres_t,train_score
 
-def train_LSTM(input_directory,train_indices,buffering,sum,sumsq,LSTM_model,iterations,obj,interval,X_cols,timeslice,granularity):
+def _train_LSTM(input_directory,train_indices,buffering,sum,sumsq,LSTM_model,iterations,obj,interval,X_cols,timeslice,granularity):
     global_X = []
     global_Y = []
     global_idx = -1
@@ -134,6 +134,16 @@ def run_LSTM(input_directory,X_cols,Y_cols,interval,lookahead,timeslice,granular
     iterations : number of training iterations
     imbalance : negative/positive imbalance ratio used in training
     lastval - if True, consider only the last point of the lookahead window for generating an example
+
+    returns:
+    fpr - test false positive rate array
+    tpr - test true positive rate array
+    thres - test roc thresholds array
+    test_score - test auc score
+    fpr_t - train false positive rate array
+    tpr_t - train true positive rate array
+    thres_t- train roc threshold array
+    train_score - train auc score
     """
     #prepare training and test indices and preprocess the data
     data_train = {}
@@ -194,7 +204,7 @@ def run_LSTM(input_directory,X_cols,Y_cols,interval,lookahead,timeslice,granular
     sum /= total
     sumsq = (sumsq/total - sum**2)**0.5
     #train and test
-    model = train_LSTM(input_directory,data_train,buffering,sum,sumsq,LSTM_model,iterations,obj,interval,X_cols,timeslice,granularity)
-    fpr,tpr,thres,test_score,fpr_t,tpr_t,thres_t,train_score = test_LSTM(input_directory,model,data_test,sum,sumsq,obj,interval,X_cols,timeslice,granularity,data_train)
+    model = _train_LSTM(input_directory,data_train,buffering,sum,sumsq,LSTM_model,iterations,obj,interval,X_cols,timeslice,granularity)
+    fpr,tpr,thres,test_score,fpr_t,tpr_t,thres_t,train_score = _test_LSTM(input_directory,model,data_test,sum,sumsq,obj,interval,X_cols,timeslice,granularity,data_train)
     return fpr,tpr,thres,test_score,fpr_t,tpr_t,thres_t,train_score
 

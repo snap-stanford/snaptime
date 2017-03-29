@@ -19,6 +19,10 @@ def cluster_data(data_file,beta,K,rho,lamb,n,w,iterations=20,sweep_length=5,e_ab
     ADMM_iter - max ADMM iterations
     granularity - minimum difference between timestamps in milliseconds
     timeslice - total length of timeseries in milliseconds
+
+    returns - 
+    cluster assignments to all points
+    array containing theta for each cluster
     """
     np.random.seed(1)
     obj = FillData()
@@ -38,4 +42,4 @@ def cluster_data(data_file,beta,K,rho,lamb,n,w,iterations=20,sweep_length=5,e_ab
         init_theta.push_back(np.linalg.inv(gmm.covariances_[i]))
     obj = Solver(sweep_length,K,beta,rho,act,lamb,n,w,init_mu,init_theta,e_abs,e_rel,ADMM_iter)
     obj.Solve(iterations)
-    return [obj.obtainAssignment()] + [obj.obtainTheta(i) for i in range(K)]
+    return obj.obtainAssignment(),[obj.obtainTheta(i) for i in range(K)]

@@ -4,6 +4,9 @@
 
 typedef TUInt64 TTime; // time value
 enum TType {BOOLEAN, STRING, INTEGER, FLOAT};
+typedef TVec<TStr> TTIdVec; // id vector
+typedef TPair<TTime, TStr> TTRawData; //time raw data, left as string
+typedef TVec<TTRawData> TTRawDataV; // vector of raw data
 
 /*
  * Basic time framework unit. Identifiable by a list of IDs (who's ordering)
@@ -15,8 +18,8 @@ enum TType {BOOLEAN, STRING, INTEGER, FLOAT};
 template <class TVal>
 class TSTime {
 public:
-    TVec<TStr> KeyIds;
-    TVec<TPair<TTime, TVal> > TimeData; // sorted by time
+    TTIdVec KeyIds;
+    TTRawDataV TimeData; // sorted by time
     TTime MinTime; // min time in range
     TTime MaxTime; // max time in range
 };
@@ -28,11 +31,11 @@ public:
  */
 class TUnsortedTime {
 public:
-    TVec<TStr> KeyIds;
-    TVec<TPair<TTime, TStr> > TimeData; // just a list of time values
+    TTIdVec KeyIds;
+    TTRawDataV TimeData; // just a list of time values
 public:
 	TUnsortedTime() : KeyIds(), TimeData() {}
-	TUnsortedTime(TVec<TStr> ids, TVec<TPair<TTime, TStr> > t_data) : KeyIds(ids), TimeData(t_data) {}
+	TUnsortedTime(TTIdVec ids, TTRawDataV t_data) : KeyIds(ids), TimeData(t_data) {}
 	void Save(TFOut& FOut) {
 		KeyIds.Save(FOut);
 		TimeData.Save(FOut);

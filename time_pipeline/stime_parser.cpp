@@ -21,7 +21,7 @@ void TSTimeParser::ReadEventFile(std::string filename) {
     // AssertR(inFile.is_open(), TStr("could not open file " + filename));
     std::string line;
     while(std::getline(infile, line)) {
-        TTIdVec IDVector = readCSVLine(line);
+        TTIdVec IDVector = TSTimeParser::readCSVLine(line);
         AssertR(IDVector.Len() >= 2, "must have at least a TS and value");
 
         TStr value = IDVector.Last();
@@ -70,9 +70,41 @@ void TSTimeParser::FlushUnsortedData() {
             AssertR(TDir::GenDir(dir_path), "failed to create directory");
         }
 
-        TStr fn = dir_path + TStr('/') + now.GetStr();
+        TStr fn = dir_path + TStr('/') + now.GetStr() + TStr(".bin");
         TFOut outstream(fn);
         time_record.Save(outstream);
+    }
+}
+ 
+// TODO: what if the vector is too big to hold in memory
+void TSTimeParser::SortBucketedData(TStr DirPath, TType type) {
+    TStrV FnV;
+    // retrieve filenames
+    TFFile::GetFNmV(DirPath, TStrV::GetV("bin"), false, FnV);
+    TUnsortedTime unsorted_record;
+    TTRawDataV BucketedData;
+    for (int i=0; i<FnV.Len(); i++) {
+        TStr filename = FnV[i];
+        TFIn infile(filename);
+        unsorted_record.Load(infile);
+        BucketedData.AddV(unsorted_record.TimeData);
+    }
+    TTIdVec IDs = unsorted_record.KeyIds;
+    RawDataCmp comparator;
+    BucketedData.SortCmp(comparator);
+    switch (type) {
+        case BOOLEAN:
+            TSTimeParser::WriteSortedData<TBool>(DirPath, IDs, BucketedData);
+            break;
+        case STRING:
+            TSTimeParser::WriteSortedData<TStr>(DirPath, IDs, BucketedData);
+            break;
+        case INTEGER:
+            TSTimeParser::WriteSortedData<TInt>(DirPath, IDs, BucketedData);
+            break;
+        default:
+            TSTimeParser::WriteSortedData<TFlt>(DirPath, IDs, BucketedData);
+            break;
     }
 }
 

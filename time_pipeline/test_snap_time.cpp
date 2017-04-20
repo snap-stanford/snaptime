@@ -3,6 +3,7 @@
 
 
 int main( int argc, char* argv[] ){
+  TStr dirname = TStr("testdir/");
   return 0;
 }
 

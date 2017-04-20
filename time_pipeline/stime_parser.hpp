@@ -6,18 +6,25 @@
 #include <iostream>
 #include <fstream>
 
-typedef TVec<TStr> TTIdVec; // id vector
-typedef TPair<TTime, TStr> TTRawData; //time raw data, left as string
+
 
 class TSTimeParser {
 public:
 	// Leave as TStr to TStr for now
-	THash<TTIdVec, TVec<TTRawData> > RawTimeData;
+	THash<TTIdVec, TTRawDataV> RawTimeData;
 private:
 	TStr Directory; // directory to start file structure.
 	TUInt CurrNumRecords;
 	TUInt MaxRecordCapacity; // records to read before flushing files
-	
+private:
+	class RawDataCmp {
+	private:
+		TCmp<TTime> cmp;
+	public:
+		int operator() (const TTRawData& x, const TTRawData& y) const {
+			return cmp(x.Val1, y.Val1);
+		}
+	};
 public:
 	TSTimeParser(TStr Dir, TUInt MaxCapacity = TUInt::Mx) {
 		Directory = Dir;
@@ -25,15 +32,22 @@ public:
 	}
 	void ReadEventFile(std::string FileName);
 	void FlushUnsortedData();
+public:
+	static void SortBucketedData(TStr DirPath, TType type);
 private:
-	TVec<TStr> readCSVLine(std::string line, char delim=',');
+	static TVec<TStr> readCSVLine(std::string line, char delim=',');
+	template<class TVal>
+	static void WriteSortedData(TStr DirPath, TTIdVec& IDs, TTRawDataV& SortedData) {
+		//TODO, write sorted data out. 
+		//TODO, put granularity
+	}
 
 };
 
 class TTSchema {
 public:
 	THash <TInt, TStr> IdIndexName; //Hash of ID index to ID name
-	// TType getType(TVec<TStr>& IdVec); //return type for given ID vector
+	// TType getType(TVec<TStr>& IdVec); // TODO return type for given ID vector
 protected:
 	class TSchemaNode {
 	public:

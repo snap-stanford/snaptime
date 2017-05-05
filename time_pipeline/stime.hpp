@@ -1,6 +1,5 @@
 #ifndef TSTIME_H
 #define TSTIME_H
-#include "Snap.h"
 
 typedef TUInt64 TTime; // time value
 enum TType {BOOLEAN, STRING, INTEGER, FLOAT};

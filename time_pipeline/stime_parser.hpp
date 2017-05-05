@@ -1,17 +1,11 @@
 #ifndef STIME_PARSER_H
 #define STIME_PARSER_H
-#include "Snap.h"
-#include "stime.hpp"
-#include <string>
-#include <iostream>
-#include <fstream>
-
-
 
 class TSTimeParser {
 public:
 	// Leave as TStr to TStr for now
 	THash<TTIdVec, TTRawDataV> RawTimeData;
+	TVec<int> ModHierarchy; //hierarchy of moduluses on prim_hash for primary filesystem
 private:
 	TStr Directory; // directory to start file structure.
 	TUInt CurrNumRecords;
@@ -31,10 +25,23 @@ public:
 		Directory = Dir;
 		CurrNumRecords = 0;
 	}
+
+	TSTimeParser(TStr Dir, TVec<int> _ModHierarchy, TUInt MaxCapacity = TUInt::Mx) {
+		ModHierarchy = _ModHierarchy;
+		MaxRecordCapacity = MaxCapacity;
+		Directory = Dir;
+		CurrNumRecords = 0;
+	}
+	//create initial primary hierarhcy
 	void ReadEventFile(std::string FileName);
 	void FlushUnsortedData();
 	void SortBucketedData(bool ClearData = true);
+	void CreatePrimDirs(TStrV& dirNames);
+
+private:
+	void GetPrimDirNames(TTIdVec & IdVec, TStrV& result);
 	
+
 private:
 	static TVec<TStr> readCSVLine(std::string line, char delim=',');
 	static TStr CreateIDVFileName(TTIdVec & IdVec);

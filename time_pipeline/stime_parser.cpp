@@ -1,6 +1,24 @@
-#include "stime_parser.hpp"
 #include <algorithm>
 #include <boost/tokenizer.hpp>
+
+void TSTimeParser::CreatePrimDirs(TStrV& dirNames) {
+    TStr dir = Directory;
+    for (int i=0; i<dirNames.Len(); i++) {
+        dir += TStr("/") + dirNames[i];
+        if (!TDir::Exists(dir)) {
+            AssertR(TDir::GenDir(dir), "Could not create directory");
+        }
+    }
+}
+
+// return a vector of the primary directory names for this idvec
+void TSTimeParser::GetPrimDirNames(TTIdVec & IdVec, TStrV& result) {
+    int primHash = IdVec.GetPrimHashCd();
+    for (int i=0; i<ModHierarchy.Len(); i++) {
+        int rem = primHash % ModHierarchy[i];
+        result.Add(TInt::GetHexStr(rem));
+    }
+}
 
 TVec<TStr> TSTimeParser::readCSVLine(std::string line, char delim) {
     // escape \, fields separated by ",", fields can be quoted with "
@@ -92,10 +110,10 @@ void TSTimeParser::FlushUnsortedData() {
 void TSTimeParser::SortBucketedData(bool ClearData) {
     std::cout << Directory.CStr() << std::endl;
     TStrV FnV;
-    TStrV emptyVec;
-    TFFile::GetFNmV(Directory, emptyVec, true, FnV);
+    // get all directories in top level dir
+    TTimeFFile::GetAllFiles(Directory, FnV, true);
     for (int i=0; i<FnV.Len(); i++) {
-        std::cout<<FnV[i].CStr()<<std::endl;
+        TSTimeParser::SortBucketedDataDir(FnV[i], INTEGER, ClearData);
     }
 }
 

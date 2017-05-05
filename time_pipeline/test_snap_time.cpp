@@ -1,8 +1,4 @@
-#include "Snap.h"
-#include "stime_parser.hpp"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "SnapTime.hpp"
 
 
 int main( int argc, char* argv[] ){
@@ -13,7 +9,12 @@ int main( int argc, char* argv[] ){
 	TStr dirname = TStr(argv[1]);
 	std::string event_file(argv[2]);
 	TSTimeParser parser(dirname);
-	parser.SortBucketedData(true);
+	TStrV fn;
+	fn.Add("abc");
+	fn.Add("def");
+	parser.CreatePrimDirs(fn);
+	// TTimeFFile::GetAllDirs(dirname);
+	// parser.SortBucketedData(true);
 	// parser.ReadEventFile(event_file);
 	// parser.SortBucketedData(TStr("testdir/101676B3_4B304146"), INTEGER,true);
   return 0;

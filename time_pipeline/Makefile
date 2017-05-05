@@ -5,24 +5,38 @@ LDFLAGS += -lrt
 SNAP = ../../../snap/snap-core
 GLIB = ../../../snap/glib-core
 
-# File names
-SOURCES = $(wildcard *.cpp)
- 
+
+DEPS = stime_parser.hpp stime_helper.hpp
+OBJ = stime_parser.o stime_helper.o
+
 opt: Snap.o SnapTime.o test_snap_time
 
-
-# Main target
-test_snap_time: test_snap_time.cpp Snap.o SnapTime.o
-	g++ $(CXXFLAGS) -o test_snap_time test_snap_time.cpp Snap.o SnapTime.o -I$(GLIB) -I$(SNAP)
-
- 
 Snap.o: 
 	g++ -c $(CXXFLAGS) $(SNAP)/Snap.cpp -I$(GLIB) -I$(SNAP)
 
-# # To obtain object files
-SnapTime.o: *.cpp Snap.o
-	$(CC) -c $(CXXFLAGS) $< Snap.o -I$(GLIB) -I$(SNAP) -o $@
+SnapTime.o:
+	$(CC) -c $(CXXFLAGS) SnapTime.cpp -I$(GLIB) -I$(SNAP) -o $@
+
+test_snap_time: test_snap_time.cpp Snap.o SnapTime.o
+	g++ $(CXXFLAGS) -o test_snap_time test_snap_time.cpp Snap.o SnapTime.o -I$(GLIB) -I$(SNAP)
+
+# %.o: %.c
+# 	$(CC) -c $(CXXFLAGS) $< -I$(GLIB) -I$(SNAP) -o $@
+
+# # File names
+# SOURCES = $(wildcard *.cpp)
  
-# To remove generated files
+# # Main target
+# test_snap_time: test_snap_time.cpp Snap.o SnapTime.o
+# 	g++ $(CXXFLAGS) -o test_snap_time test_snap_time.cpp SnapTime.o -I$(GLIB) -I$(SNAP)
+
+ 
+
+
+# # # To obtain object files
+# SnapTime.o: *.cpp
+# 	$(CC) -c $(CXXFLAGS) $< -I$(GLIB) -I$(SNAP) -o $@
+ 
+# # To remove generated files
 clean:
 	rm -f test_snap_time *.o

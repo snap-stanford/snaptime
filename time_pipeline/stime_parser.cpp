@@ -20,8 +20,13 @@ void TSTimeParser::ReadEventFile(std::string filename) {
     std::ifstream infile(filename);
     // AssertR(inFile.is_open(), TStr("could not open file " + filename));
     std::string line;
+    std::cout << "Num Records " << CurrNumRecords << std::endl;
     while(std::getline(infile, line)) {
         TTIdVec IDVector = TSTimeParser::readCSVLine(line);
+        std::cout << "lines read " << CurrNumRecords << std::endl;
+        // for (int i=0; i < IDVector.Len(); i++) {
+        //     std::cout << IDVector[i].CStr() << std::endl;
+        // }
         AssertR(IDVector.Len() >= 2, "must have at least a TS and value");
 
         TStr value = IDVector.Last();
@@ -41,10 +46,22 @@ void TSTimeParser::ReadEventFile(std::string filename) {
         }
         CurrNumRecords++;
         if (CurrNumRecords >= MaxRecordCapacity) {
+            std::cout << MaxRecordCapacity << std::endl;
+            // AssertR(false, "stop here");
             FlushUnsortedData();
             CurrNumRecords = 0;
         }
     }
+    FlushUnsortedData();
+}
+
+//fname is based on primary and secondary hash of ids
+// primHash_secHash (does not include .bin)
+TStr TSTimeParser::CreateIDVFileName(TTIdVec & IdVec) {
+    TStr prim_hash = TInt::GetHexStr(IdVec.GetPrimHashCd()); //dirnames are based on hash of ids
+    TStr sec_hash = TInt::GetHexStr(IdVec.GetSecHashCd()); //dirnames are based on hash of ids
+    TStr result = prim_hash + TStr("_") + sec_hash;
+    return result;
 }
 
 void TSTimeParser::FlushUnsortedData() {
@@ -52,19 +69,15 @@ void TSTimeParser::FlushUnsortedData() {
     time_t t = std::time(0);
     TUInt64 now = static_cast<uint64> (t);
 
-    char new_dir_path[30]; //buffer to put new directory path
-    new_dir_path[0] = '/';
-
     for (it = RawTimeData.BegI(); it != RawTimeData.EndI(); it++) {
         TTIdVec IdVec = it.GetKey();
         TVec<TTRawData> dat = it.GetDat();
 
         TUnsortedTime time_record(IdVec, dat);
 
-        int prim_hash = IdVec.GetPrimHashCd(); //dirnames are based on hash of ids
-        int sec_hash = IdVec.GetSecHashCd(); //dirnames are based on hash of ids
-        sprintf(new_dir_path + 1, "%x_%x", prim_hash, sec_hash);
-        TStr dir_path = Directory + TStr(new_dir_path);
+        TStr loc_fn = TSTimeParser::CreateIDVFileName(IdVec);
+
+        TStr dir_path = Directory + TStr("/") + loc_fn;
         //create a directory for this record if it doesn't already exist
         if (!TDir::Exists(dir_path)) {
             AssertR(TDir::GenDir(dir_path), "failed to create directory");
@@ -75,9 +88,19 @@ void TSTimeParser::FlushUnsortedData() {
         time_record.Save(outstream);
     }
 }
- 
+
+void TSTimeParser::SortBucketedData(bool ClearData) {
+    std::cout << Directory.CStr() << std::endl;
+    TStrV FnV;
+    TStrV emptyVec;
+    TFFile::GetFNmV(Directory, emptyVec, true, FnV);
+    for (int i=0; i<FnV.Len(); i++) {
+        std::cout<<FnV[i].CStr()<<std::endl;
+    }
+}
+
 // TODO: what if the vector is too big to hold in memory
-void TSTimeParser::SortBucketedData(TStr DirPath, TType type) {
+void TSTimeParser::SortBucketedDataDir(TStr DirPath, TType type, bool ClearData) {
     TStrV FnV;
     // retrieve filenames
     TFFile::GetFNmV(DirPath, TStrV::GetV("bin"), false, FnV);
@@ -94,16 +117,20 @@ void TSTimeParser::SortBucketedData(TStr DirPath, TType type) {
     BucketedData.SortCmp(comparator);
     switch (type) {
         case BOOLEAN:
-            TSTimeParser::WriteSortedData<TBool>(DirPath, IDs, BucketedData);
+            TSTimeParser::WriteSortedData<TBool>(DirPath, IDs, BucketedData,
+                [] (TStr s) {return TBool(s[0] == 'T' || s[0] == 't' || s[0] == '1');}, ClearData);
             break;
         case STRING:
-            TSTimeParser::WriteSortedData<TStr>(DirPath, IDs, BucketedData);
+            TSTimeParser::WriteSortedData<TStr>(DirPath, IDs, BucketedData,
+                [] (TStr s) { return s;}, ClearData);
             break;
         case INTEGER:
-            TSTimeParser::WriteSortedData<TInt>(DirPath, IDs, BucketedData);
+            TSTimeParser::WriteSortedData<TInt>(DirPath, IDs, BucketedData,
+                [] (TStr s) { return TInt(s.GetInt());}, ClearData);
             break;
         default:
-            TSTimeParser::WriteSortedData<TFlt>(DirPath, IDs, BucketedData);
+            TSTimeParser::WriteSortedData<TFlt>(DirPath, IDs, BucketedData,
+                [] (TStr s) { return TFlt(s.GetFlt());}, ClearData);
             break;
     }
 }

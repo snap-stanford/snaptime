@@ -27,18 +27,46 @@ private:
 	};
 public:
 	TSTimeParser(TStr Dir, TUInt MaxCapacity = TUInt::Mx) {
+		MaxRecordCapacity = MaxCapacity;
 		Directory = Dir;
 		CurrNumRecords = 0;
 	}
 	void ReadEventFile(std::string FileName);
 	void FlushUnsortedData();
-public:
-	static void SortBucketedData(TStr DirPath, TType type);
+	void SortBucketedData(bool ClearData = true);
+	
 private:
 	static TVec<TStr> readCSVLine(std::string line, char delim=',');
+	static TStr CreateIDVFileName(TTIdVec & IdVec);
+
+	static void SortBucketedDataDir(TStr DirPath, TType type, bool ClearData);
+
 	template<class TVal>
-	static void WriteSortedData(TStr DirPath, TTIdVec& IDs, TTRawDataV& SortedData) {
-		//TODO, write sorted data out. 
+	static void WriteSortedData(TStr DirPath, TTIdVec& IDs, TTRawDataV& SortedData, TVal (*val_convert)(TStr),
+		bool ClearData) {
+		std::cout<<ClearData<<std::endl;
+		// convert all strings into actual data types
+		TSTime<TVal> result(IDs);
+		for (int i=0; i < SortedData.Len(); i++) {
+			TTime ts = SortedData[i].GetVal1();
+			TVal val = val_convert(SortedData[i].GetVal2());
+			TPair<TTime, TVal> new_val(ts, val);
+			result.TimeData.Add(new_val);
+		}
+		TStr OutFile = DirPath + TStr("/") + CreateIDVFileName(IDs) + TStr(".out");
+		if (ClearData) {
+			std::cout << "clearing directory: " << DirPath.CStr() << std::endl;
+			TStrV FnV;
+			TFFile::GetFNmV(DirPath, TStrV::GetV("bin"), false, FnV);
+			for (int i=0; i<FnV.Len(); i++) {
+				std::cout << FnV[i].CStr() << std::endl;
+				TFile::Del(FnV[i]);
+			}
+		}
+
+		//save file out
+		TFOut outstream(OutFile);
+		result.Save(outstream);
 		//TODO, put granularity
 	}
 

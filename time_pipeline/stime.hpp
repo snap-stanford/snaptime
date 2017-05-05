@@ -19,9 +19,17 @@ template <class TVal>
 class TSTime {
 public:
     TTIdVec KeyIds;
-    TTRawDataV TimeData; // sorted by time
-    TTime MinTime; // min time in range
-    TTime MaxTime; // max time in range
+    TVec<TPair<TTime, TVal> > TimeData; // sorted by time
+public:
+	TSTime(TTIdVec _KeyIds) : KeyIds(_KeyIds), TimeData() {}
+	void Save(TFOut& FOut) {
+		KeyIds.Save(FOut);
+		TimeData.Save(FOut);
+	}
+	void Load(TFIn& FIn) {
+		KeyIds.Load(FIn);
+		TimeData.Load(FIn);
+	}
 };
 
 /*

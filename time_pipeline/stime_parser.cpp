@@ -1,7 +1,12 @@
 #include <algorithm>
 #include <boost/tokenizer.hpp>
 
-void TSTimeParser::CreatePrimDirs(TStrV& dirNames) {
+//Create primary directory structure including indiv folder. return full directory path
+TStr TSTimeParser::CreatePrimDirs(TTIdVec & IdVec) {
+    //get the directory names based on hash
+    TStrV dirNames;
+    GetPrimDirNames(IdVec, dirNames);
+
     TStr dir = Directory;
     for (int i=0; i<dirNames.Len(); i++) {
         dir += TStr("/") + dirNames[i];
@@ -9,15 +14,17 @@ void TSTimeParser::CreatePrimDirs(TStrV& dirNames) {
             AssertR(TDir::GenDir(dir), "Could not create directory");
         }
     }
+    return dir;
 }
 
-// return a vector of the primary directory names for this idvec
+// return a vector of the primary directory names for this idvec (including indiv folder)
 void TSTimeParser::GetPrimDirNames(TTIdVec & IdVec, TStrV& result) {
     int primHash = IdVec.GetPrimHashCd();
     for (int i=0; i<ModHierarchy.Len(); i++) {
         int rem = primHash % ModHierarchy[i];
-        result.Add(TInt::GetHexStr(rem));
+        result.Add(TInt(rem).GetStr());
     }
+    result.Add(TSTimeParser::CreateIDVFileName(IdVec));
 }
 
 TVec<TStr> TSTimeParser::readCSVLine(std::string line, char delim) {
@@ -41,10 +48,7 @@ void TSTimeParser::ReadEventFile(std::string filename) {
     std::cout << "Num Records " << CurrNumRecords << std::endl;
     while(std::getline(infile, line)) {
         TTIdVec IDVector = TSTimeParser::readCSVLine(line);
-        std::cout << "lines read " << CurrNumRecords << std::endl;
-        // for (int i=0; i < IDVector.Len(); i++) {
-        //     std::cout << IDVector[i].CStr() << std::endl;
-        // }
+        if (CurrNumRecords % 1000 == 0) std::cout << "lines read " << CurrNumRecords << std::endl;
         AssertR(IDVector.Len() >= 2, "must have at least a TS and value");
 
         TStr value = IDVector.Last();
@@ -65,7 +69,6 @@ void TSTimeParser::ReadEventFile(std::string filename) {
         CurrNumRecords++;
         if (CurrNumRecords >= MaxRecordCapacity) {
             std::cout << MaxRecordCapacity << std::endl;
-            // AssertR(false, "stop here");
             FlushUnsortedData();
             CurrNumRecords = 0;
         }
@@ -83,6 +86,7 @@ TStr TSTimeParser::CreateIDVFileName(TTIdVec & IdVec) {
 }
 
 void TSTimeParser::FlushUnsortedData() {
+    std::cout<< "Flushing data"<<std::endl;
     THash<TTIdVec, TVec<TTRawData> >::TIter it;
     time_t t = std::time(0);
     TUInt64 now = static_cast<uint64> (t);
@@ -92,16 +96,9 @@ void TSTimeParser::FlushUnsortedData() {
         TVec<TTRawData> dat = it.GetDat();
 
         TUnsortedTime time_record(IdVec, dat);
-
-        TStr loc_fn = TSTimeParser::CreateIDVFileName(IdVec);
-
-        TStr dir_path = Directory + TStr("/") + loc_fn;
-        //create a directory for this record if it doesn't already exist
-        if (!TDir::Exists(dir_path)) {
-            AssertR(TDir::GenDir(dir_path), "failed to create directory");
-        }
-
-        TStr fn = dir_path + TStr('/') + now.GetStr() + TStr(".bin");
+        // create primary structure as necessary
+        TStr dir_prefix = CreatePrimDirs(IdVec);
+        TStr fn = dir_prefix + TStr('/') + now.GetStr() + TStr(".bin");
         TFOut outstream(fn);
         time_record.Save(outstream);
     }
@@ -110,10 +107,26 @@ void TSTimeParser::FlushUnsortedData() {
 void TSTimeParser::SortBucketedData(bool ClearData) {
     std::cout << Directory.CStr() << std::endl;
     TStrV FnV;
-    // get all directories in top level dir
-    TTimeFFile::GetAllFiles(Directory, FnV, true);
-    for (int i=0; i<FnV.Len(); i++) {
-        TSTimeParser::SortBucketedDataDir(FnV[i], INTEGER, ClearData);
+    int hierarchySize = ModHierarchy.Len() +1 ;// including the top level directory
+    TSTimeParser::TraverseAndSortData(Directory, hierarchySize, ClearData);
+
+}
+
+// ----------
+// STATIC
+// ----------
+
+void TSTimeParser::TraverseAndSortData(TStr Dir, int level, bool ClearData) {
+    AssertR(level >= 0, "invalid level");
+    if (level == 0) {
+        SortBucketedDataDir(Dir, INTEGER, ClearData);
+        std::cout<< Dir.CStr() << std::endl;
+    } else {
+        TStrV FnV;
+        TTimeFFile::GetAllFiles(Dir, FnV, true); // get the directories
+        for (int i=0; i<FnV.Len(); i++) {
+            TraverseAndSortData(FnV[i], level - 1, ClearData);
+        }
     }
 }
 

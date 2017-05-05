@@ -24,6 +24,7 @@ public:
 		MaxRecordCapacity = MaxCapacity;
 		Directory = Dir;
 		CurrNumRecords = 0;
+		if (!TDir::Exists(Directory)) TDir::GenDir(Directory);
 	}
 
 	TSTimeParser(TStr Dir, TVec<int> _ModHierarchy, TUInt MaxCapacity = TUInt::Mx) {
@@ -31,22 +32,23 @@ public:
 		MaxRecordCapacity = MaxCapacity;
 		Directory = Dir;
 		CurrNumRecords = 0;
+		if (!TDir::Exists(Directory)) TDir::GenDir(Directory);
 	}
 	//create initial primary hierarhcy
 	void ReadEventFile(std::string FileName);
 	void FlushUnsortedData();
 	void SortBucketedData(bool ClearData = true);
-	void CreatePrimDirs(TStrV& dirNames);
 
 private:
 	void GetPrimDirNames(TTIdVec & IdVec, TStrV& result);
+	TStr CreatePrimDirs(TTIdVec & IdVec);
 	
 
 private:
 	static TVec<TStr> readCSVLine(std::string line, char delim=',');
 	static TStr CreateIDVFileName(TTIdVec & IdVec);
-
 	static void SortBucketedDataDir(TStr DirPath, TType type, bool ClearData);
+	static void TraverseAndSortData(TStr Dir, int level, bool ClearData);
 
 	template<class TVal>
 	static void WriteSortedData(TStr DirPath, TTIdVec& IDs, TTRawDataV& SortedData, TVal (*val_convert)(TStr),

@@ -7,7 +7,7 @@ public:
 	THash<TTIdVec, TTRawDataV> RawTimeData;
 	TVec<int> ModHierarchy; //hierarchy of moduluses on prim_hash for primary filesystem
 private:
-	TStr Directory; // directory to start file structure.
+	TStr OutputDirectory; // OutputDirectory to start file structure.
 	TUInt CurrNumRecords;
 	TUInt MaxRecordCapacity; // records to read before flushing files
 	TTSchema schema;
@@ -33,25 +33,25 @@ private:
 		}
 	};
 public:
-	TSTimeParser(TStr Dir, TStr SchemaFile, TUInt MaxCapacity = TUInt::Mx) {
+	TSTimeParser(TStr OutputDir, TStr SchemaFile, TUInt MaxCapacity = TUInt::Mx) {
 		schema.ReadSchemaFile(SchemaFile);
 		MaxRecordCapacity = MaxCapacity;
-		Directory = Dir;
+		OutputDirectory = OutputDir;
 		CurrNumRecords = 0;
-		if (!TDir::Exists(Directory)) TDir::GenDir(Directory);
+		if (!TDir::Exists(OutputDirectory)) TDir::GenDir(OutputDirectory);
 	}
 
-	TSTimeParser(TStr Dir, TStr SchemaFile, TVec<int> _ModHierarchy, TUInt MaxCapacity = TUInt::Mx) {
+	TSTimeParser(TStr OutputDir, TStr SchemaFile, TVec<int> _ModHierarchy, TUInt MaxCapacity = TUInt::Mx) {
 		schema.ReadSchemaFile(SchemaFile);
 		ModHierarchy = _ModHierarchy;
 		MaxRecordCapacity = MaxCapacity;
-		Directory = Dir;
+		OutputDirectory = OutputDir;
 		CurrNumRecords = 0;
-		if (!TDir::Exists(Directory)) TDir::GenDir(Directory);
+		if (!TDir::Exists(OutputDirectory)) TDir::GenDir(OutputDirectory);
 	}
 	//create initial primary hierarhcy
 	void ReadEventFile(std::string FileName); // old method, TODO delete
-	// crawl through Directory given a schema
+	// crawl through OutputDirectory given a schema
 	void ReadRawData(TStr DirName);
 	void FlushUnsortedData();
 	void SortBucketedData(bool ClearData = true);

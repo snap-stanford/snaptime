@@ -1,5 +1,13 @@
+// TODO: not sure if this matters, but using format string from user could be a security bug
 TTime TTSchema::ConvertTime(TStr timeVal) {
-    return 0;
+	if (!IsTimeStr) {
+		return timeVal.GetUInt64();
+	}
+	
+	struct tm ts;
+	strptime(timeVal.CStr(), TimeFormatter.CStr(), &ts);
+	time_t t = mktime(&ts);
+	return (TTime) t;
 }
 
 void TTSchema::PrintSchema() {

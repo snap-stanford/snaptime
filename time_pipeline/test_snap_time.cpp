@@ -3,20 +3,21 @@
 
 int main( int argc, char* argv[] ){
 
-	if (argc != 2) {
-		std::cout << "expect schema filename" << std::endl;
+	if (argc != 4) {
+		std::cout << "wrong num args" << std::endl;
 		exit(0);
 	}
-	TStr filename(argv[1]);
-	TTSchema schema;
-	schema.ReadSchemaFile(filename);
-	schema.PrintSchema();
+	TStr SchemaFile(argv[1]);
+	TStr InputDir(argv[2]);
+	TStr OutputDir(argv[3]);
 
+	TVec<int> ModHierarchy;
+	ModHierarchy.Add(29);
+	ModHierarchy.Add(13);
 
-	// if (argc != 3) {
-	// 	std::cout << "expect <directory> <event file>" << std::endl;
-	// 	exit(0);
-	// }
+	TSTimeParser parser(OutputDir, SchemaFile, ModHierarchy, 100000);
+	parser.ReadRawData(InputDir);
+
 	// TStr dirname = TStr(argv[1]);
 	// std::string event_file(argv[2]);
 	// TVec<int> ModHierarchy;

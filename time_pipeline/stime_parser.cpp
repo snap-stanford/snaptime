@@ -123,7 +123,7 @@ TStr TSTimeParser::CreatePrimDirs(TTIdVec & IdVec) {
     TStrV dirNames;
     GetPrimDirNames(IdVec, dirNames);
 
-    TStr dir = Directory;
+    TStr dir = OutputDirectory;
     for (int i=0; i<dirNames.Len(); i++) {
         dir += TStr("/") + dirNames[i];
         if (!TDir::Exists(dir)) {
@@ -144,6 +144,7 @@ void TSTimeParser::GetPrimDirNames(TTIdVec & IdVec, TStrV& result) {
 }
 
 /// Should be ID, ID, ID... timestamp, value
+// THis is old, TODO: Delete
 void TSTimeParser::ReadEventFile(std::string filename) {
     std::ifstream infile(filename);
     AssertR(infile.is_open(), "could not open eventfile");
@@ -208,10 +209,10 @@ void TSTimeParser::FlushUnsortedData() {
 }
 
 void TSTimeParser::SortBucketedData(bool ClearData) {
-    std::cout << Directory.CStr() << std::endl;
+    std::cout << OutputDirectory.CStr() << std::endl;
     TStrV FnV;
     int hierarchySize = ModHierarchy.Len() +1 ;// including the top level directory
-    TraverseAndSortData(Directory, hierarchySize, ClearData);
+    TraverseAndSortData(OutputDirectory, hierarchySize, ClearData);
 
 }
 

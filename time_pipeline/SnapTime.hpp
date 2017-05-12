@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <time.h>
 
 #include "Snap.h"
 #include "stime.hpp"
@@ -13,4 +14,4 @@
 
 
 
-#endif //SNATIME_H
+#endif //SNAPTIME_H

@@ -111,7 +111,7 @@ On_Off_room_thermostat_230Vac_is_Y_S_compliant, SENSOR
 Flame_current, SENSOR
 Fan_speed, SENSOR
 Fan_speed_setpoint, SENSOR
-Bogus, SENSOR
+#Bogus, SENSOR
 END Schema
 
 START SchemaTypes

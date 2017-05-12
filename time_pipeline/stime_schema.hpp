@@ -47,6 +47,8 @@ public:
 	 THash<TStr, TType> SensorType;
 	 TType defaultType; /* by default, float */
 
+	char FileDelimiter; /* default ',' */
+
 	 /*
 	  * Time manipulation
 	  */
@@ -59,6 +61,7 @@ public:
 		IsTimeStr = false;
 		HasTime = false;
 		defaultType = FLOAT;
+		FileDelimiter = ',';
 	}
 
 	void ReadSchemaFile(TStr FileName);

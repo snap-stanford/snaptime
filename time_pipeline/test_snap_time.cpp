@@ -17,6 +17,7 @@ int main( int argc, char* argv[] ){
 
 	TSTimeParser parser(OutputDir, SchemaFile, ModHierarchy, 100000);
 	parser.ReadRawData(InputDir);
+	parser.SortBucketedData(true);
 
 	// TStr dirname = TStr(argv[1]);
 	// std::string event_file(argv[2]);

@@ -110,7 +110,7 @@ void TSTimeParser::AdjustDcmd(TStr & Name, TStr & Behavior, DirCrawlMetaData & d
     } else {
         AssertR(schema.IDName_To_Index.IsKey(Behavior), "Invalid schema");
         int IDIndex = schema.IDName_To_Index.GetDat(Behavior);
-        AssertR(dcmd.RunningIDVec[IDIndex] == TStr::GetNullStr(), "Invalid schema: repeat IDs");
+        // AssertR(dcmd.RunningIDVec[IDIndex] == TStr::GetNullStr(), "Invalid schema: repeat IDs");
         dcmd.RunningIDVec[IDIndex] = Name;
     }
 }

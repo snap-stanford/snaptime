@@ -1,10 +1,13 @@
 void TSTimeParser::ReadRawData(TStr DirName) {
+    std::cout << "Start Reading" << std::endl;
     DirCrawlMetaData dcmd (schema.IdNames.Len());
     ExploreDataDirs(DirName, dcmd, 0);
     FlushUnsortedData();
+    std::cout << "Done Reading" << std::endl;
 }
 
 void TSTimeParser::ExploreDataDirs(TStr & DirName, DirCrawlMetaData dcmd, int DirIndex) {
+    std::cout << "Explore Dirs "<< DirName.CStr() << std::endl;
     //adjust the metadata based on dir filename
     TStr DirBehavior = schema.Dirs[DirIndex];
     AdjustDcmd(DirName, DirBehavior, dcmd);
@@ -16,7 +19,7 @@ void TSTimeParser::ExploreDataDirs(TStr & DirName, DirCrawlMetaData dcmd, int Di
     }
     // otherwise, we're at a directory. Adjust the running id vec if necessary
     TStrV FnV;
-    TTimeFFile::GetAllFiles(DirName, FnV, true); // get the directories
+    TTimeFFile::GetAllFiles(DirName, FnV, false); // get the directories
     for (int i=0; i< FnV.Len(); i++) {
         ExploreDataDirs(FnV[i], dcmd, DirIndex + 1);
     }
@@ -37,11 +40,14 @@ void TSTimeParser::ReadEventDataFile(TStr & FileName, DirCrawlMetaData & dcmd) {
 
         TVec<TPair<TStr, TStr>> sensor_vals; // <(SensorName, SensorValue), ...>
         // iterate through column values
+        // std::cout<<"---"<<std::endl;
         for (int i=0; i<row.Len(); i++) {
             TPair<TStr, TColType> col = schema.FileSchema[i];
             TStr IDName = col.GetVal1();
             TColType ColBehavior = col.GetVal2();
             TStr DataVal = row[i];
+            if (DataVal == TStr("")) continue; //don't deal with it if empty
+            // std::cout << IDName.CStr() << std::endl;
             //deal with ID and time first
             switch(ColBehavior) {
                 case NO_ID:
@@ -206,6 +212,7 @@ void TSTimeParser::FlushUnsortedData() {
         TFOut outstream(fn);
         time_record.Save(outstream);
     }
+    std::cout<< "done flushing" << std::endl;
 }
 
 void TSTimeParser::SortBucketedData(bool ClearData) {

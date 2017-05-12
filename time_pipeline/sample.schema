@@ -1,7 +1,9 @@
+# Directory Structure
 START FileHierarchy
 NULL, MachineID
 END FileHierarchy
 
+# File Structure. Must have at least one sensor value. Can only have one sensor value if SENSOR is an IDName
 START Schema
 DateTime, TIME
 System_time, SENSOR
@@ -34,9 +36,9 @@ Operating_status:_Error_Blocking, SENSOR
 Operating_status:_Maintenance_request, SENSOR
 Anti_fast_cycle_time_DT25, SENSOR
 PWM_pump_present, SENSOR
-Fluegas_sensor_present, SENSOR
-Pressure_sensor_present, SENSOR
-Return_sensor_present, SENSOR
+Fluegas_SENSOR_present, SENSOR
+Pressure_SENSOR_present, SENSOR
+Return_SENSOR_present, SENSOR
 Relay_status:_Gasvalve, SENSOR
 Relay_status:_Fan, SENSOR
 Relay_status:_Ignition, SENSOR
@@ -76,7 +78,7 @@ Number_of_starts_hot_water, SENSOR
 Hot_water_temperature_setpoint, SENSOR
 Hot_water_outlet_temperature, SENSOR
 Hot_water_storage_temperature, SENSOR
-Hot_water_flow_sensor_(turbine), SENSOR
+Hot_water_flow_SENSOR_(turbine), SENSOR
 Programmer_channel_for_hot_water_active, SENSOR
 Hot_water_installed_at_appliance, SENSOR
 Hot_water_switch, SENSOR
@@ -93,7 +95,7 @@ Hot_water_system_is_being_heated, SENSOR
 Hot_water_system_is_being_post_heated, SENSOR
 Hot_water_setpoint_is_reached, SENSOR
 Hot_water_priority_status, SENSOR
-Error_status_byte_DHW_Hot_water_sensor_1_is_defect, SENSOR
+Error_status_byte_DHW_Hot_water_SENSOR_1_is_defect, SENSOR
 Error_status_byte_DHW_Thermal_Disinfection_did_not_work, SENSOR
 Service_Request_Setting, SENSOR
 Service_after_burner_operating_time, SENSOR
@@ -111,13 +113,13 @@ On_Off_room_thermostat_230Vac_is_Y_S_compliant, SENSOR
 Flame_current, SENSOR
 Fan_speed, SENSOR
 Fan_speed_setpoint, SENSOR
-Bogus, SENSOR
 END Schema
-
-START SchemaTypes
-DEFAULT, FLOAT
-END SchemaTypes
 
 START TimeConvert
 %d.%m.%Y %H:%M:%S
 END TimeConvert
+
+START SchemaTypes
+DEFAULT, FLOAT
+bogus, INTEGER
+END SchemaTypes

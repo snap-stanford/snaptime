@@ -74,7 +74,6 @@ private:
 	template<class TVal>
 	static void WriteSortedData(TStr DirPath, TTIdVec& IDs, TTRawDataV& SortedData, TVal (*val_convert)(TStr),
 		bool ClearData) {
-		std::cout<<ClearData<<std::endl;
 		// convert all strings into actual data types
 		TSTime<TVal> result(IDs);
 		for (int i=0; i < SortedData.Len(); i++) {

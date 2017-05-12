@@ -1,5 +1,48 @@
-#include <algorithm>
-#include <boost/tokenizer.hpp>
+//
+void TSTimeParser::ReadRawData(TStr DirName) {
+    DirCrawlMetaData dcmd (schema.IdNames.Len());
+    ExploreDataDirs(DirName, dcmd, 0);
+}
+
+void TSTimeParser::ExploreDataDirs(TStr & DirName, DirCrawlMetaData dcmd, int DirIndex) {
+    //adjust the metadata based on dir filename
+    TStr DirBehavior = schema.Dirs[DirIndex];
+    AdjustDcmd(DirName, DirBehavior, dcmd);
+
+    //base case: at the end of the dirs, so this is an event file. Parse it
+    if (DirIndex == schema.Dirs.Len()-1) {
+        ReadEventFile(DirName, dcmd);
+        return;
+    }
+    // otherwise, we're at a directory. Adjust the running id vec if necessary
+    TStr DirBehavior = schema.Dirs[DirIndex];
+    TStrV FnV;
+    TTimeFFile::GetAllFiles(DirName, FnV, true); // get the directories
+    for (int i=0; i< FnV.Len(); i++) {
+        ExploreDataDirs(FnV[i], dcmd, DirIndex + 1);
+    }
+}
+
+/*
+ * DirBehavior can be:
+ *  NULL: do nothing
+ *  TIME: set dcmd's time
+ *  DEFAULT: treat DirName as an ID under DirBehavior's IDName
+ */
+void AdjustDcmd(TStr & DirName, TStr & DirBehavior, DirCrawlMetaData & dcmd) {
+    if (DirBehavior == TStr("NULL")) return;
+    if (DirBehavior == TStr("TIME")) {
+        dcmd.time = ConvertTime(DirName);
+        TimeSet = true;
+    } else {
+        AssertR(schema.IDName_To_Index.IsKey(DirBehavior), "Invalid schema");
+        int IDIndex = IDName_To_Index[DirBehavior];
+        AssertR(dcmd[IDIndex] == TStr::GetNullStr(), "Invalid schema: repeat IDs");
+        dcmd[IDIndex] = DirName;
+    }
+}
+
+
 
 //Create primary directory structure including indiv folder. return full directory path
 TStr TSTimeParser::CreatePrimDirs(TTIdVec & IdVec) {
@@ -27,27 +70,14 @@ void TSTimeParser::GetPrimDirNames(TTIdVec & IdVec, TStrV& result) {
     result.Add(TSTimeParser::CreateIDVFileName(IdVec));
 }
 
-TVec<TStr> TSTimeParser::readCSVLine(std::string line, char delim) {
-    // escape \, fields separated by ",", fields can be quoted with "
-    boost::escaped_list_separator<char> sep( '\\', delim, '"' ) ;
-    typedef boost::tokenizer< boost::escaped_list_separator<char> > boost_tokenizer;
-    boost_tokenizer tok( line, sep );
-    TVec<TStr> vec_line;
-    for(boost_tokenizer::iterator beg= tok.begin(); beg!=tok.end(); ++beg)
-    {
-        vec_line.Add(TStr((*beg).c_str()));
-    }
-    return vec_line;
-}
-
 /// Should be ID, ID, ID... timestamp, value
 void TSTimeParser::ReadEventFile(std::string filename) {
     std::ifstream infile(filename);
-    // AssertR(inFile.is_open(), TStr("could not open file " + filename));
+    AssertR(infile.is_open(), "could not open eventfile");
     std::string line;
     std::cout << "Num Records " << CurrNumRecords << std::endl;
     while(std::getline(infile, line)) {
-        TTIdVec IDVector = TSTimeParser::readCSVLine(line);
+        TTIdVec IDVector = TCSVParse::readCSVLine(line);
         if (CurrNumRecords % 1000 == 0) std::cout << "lines read " << CurrNumRecords << std::endl;
         AssertR(IDVector.Len() >= 2, "must have at least a TS and value");
 

@@ -10,6 +10,7 @@ private:
 	TStr Directory; // directory to start file structure.
 	TUInt CurrNumRecords;
 	TUInt MaxRecordCapacity; // records to read before flushing files
+	TTSchema schema;
 private:
 	class RawDataCmp {
 	private:
@@ -19,15 +20,26 @@ private:
 			return cmp(x.Val1, y.Val1);
 		}
 	};
+
+	class DirCrawlMetaData {
+	public:
+		TTIdVec RunningIDVec;
+		TTime time;
+		bool TimeSet;
+	public:
+		DirCrawlMetaData(int numIds) : RunningIDVec(numIds), time(0), TimeSet(0) {}
+	};
 public:
-	TSTimeParser(TStr Dir, TUInt MaxCapacity = TUInt::Mx) {
+	TSTimeParser(TStr Dir, TStr SchemaFile, TUInt MaxCapacity = TUInt::Mx) {
+		schema.ReadSchemaFile(SchemaFile);
 		MaxRecordCapacity = MaxCapacity;
 		Directory = Dir;
 		CurrNumRecords = 0;
 		if (!TDir::Exists(Directory)) TDir::GenDir(Directory);
 	}
 
-	TSTimeParser(TStr Dir, TVec<int> _ModHierarchy, TUInt MaxCapacity = TUInt::Mx) {
+	TSTimeParser(TStr Dir, TStr SchemaFile, TVec<int> _ModHierarchy, TUInt MaxCapacity = TUInt::Mx) {
+		schema.ReadSchemaFile(SchemaFile);
 		ModHierarchy = _ModHierarchy;
 		MaxRecordCapacity = MaxCapacity;
 		Directory = Dir;
@@ -36,6 +48,7 @@ public:
 	}
 	//create initial primary hierarhcy
 	void ReadEventFile(std::string FileName);
+
 	void FlushUnsortedData();
 	void SortBucketedData(bool ClearData = true);
 
@@ -45,7 +58,7 @@ private:
 	
 
 private:
-	static TVec<TStr> readCSVLine(std::string line, char delim=',');
+	// static TVec<TStr> readCSVLine(std::string line, char delim=',');
 	static TStr CreateIDVFileName(TTIdVec & IdVec);
 	static void SortBucketedDataDir(TStr DirPath, TType type, bool ClearData);
 	static void TraverseAndSortData(TStr Dir, int level, bool ClearData);
@@ -79,32 +92,6 @@ private:
 		//TODO, put granularity
 	}
 
-};
-
-class TTSchema {
-public:
-	THash <TInt, TStr> IdIndexName; //Hash of ID index to ID name
-	// TType getType(TVec<TStr>& IdVec); // TODO return type for given ID vector
-protected:
-	class TSchemaNode {
-	public:
-		virtual TBool IsTerminal() = 0;
-	};
-	class TInternalSchemaNode : TSchemaNode {
-	public:
-		TInt KeyIndex;
-		THash<TStr, TSchemaNode*> KeyToNode;
-	public:
-		TBool IsTerminal () {return false;}
-	};
-
-	class TLeafSchemaNode : TSchemaNode {
-	public:
-		TType type;
-		//todo put granularity
-	public:
-		TBool IsTerminal () {return false;}
-	};
 };
 
 #endif

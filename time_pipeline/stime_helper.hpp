@@ -6,4 +6,10 @@ public:
   static void GetAllFiles(TStr& Path, TStrV& FnV, bool OnlyDirs = false);
 };
 
+class TCSVParse {
+public:
+	static TVec<TStr> readCSVLine(std::string line, char delim=',', bool TrimWs = true);
+	static std::string trim(std::string const& str);
+};
+
 #endif

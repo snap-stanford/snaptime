@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <time.h>
+#include <sstream> 
 
 #include "Snap.h"
 #include "stime.hpp"

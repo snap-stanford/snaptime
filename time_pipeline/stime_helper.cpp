@@ -1,6 +1,4 @@
 #include "stime_helper.hpp"
-#include <algorithm>
-#include <boost/tokenizer.hpp>
 
 //includes directories. returns the full path
 void TTimeFFile::GetAllFiles(TStr& Path, TStrV& FnV, bool OnlyDirs){
@@ -18,21 +16,19 @@ void TTimeFFile::GetAllFiles(TStr& Path, TStrV& FnV, bool OnlyDirs){
 }
 
 TVec<TStr> TCSVParse::readCSVLine(std::string line, char delim, bool TrimWs) {
-    // escape \, fields separated by ",", fields can be quoted with "
-    boost::escaped_list_separator<char> sep( '\\', delim, '"' ) ;
-    typedef boost::tokenizer< boost::escaped_list_separator<char> > boost_tokenizer;
-    boost_tokenizer tok( line, sep );
     TVec<TStr> vec_line;
-    for(boost_tokenizer::iterator beg= tok.begin(); beg!=tok.end(); ++beg)
-    {
-      std::string val = *beg;
-      if (TrimWs) {
+    std::istringstream is(line);
+    std::string temp;
+    while(getline(is, temp, delim)) {
+      std::string val = temp;
+      if(TrimWs) {
         val = trim(val);
       }
       vec_line.Add(TStr(val.c_str()));
     }
     return vec_line;
 }
+
 
 std::string TCSVParse::trim(std::string const& str)
 {

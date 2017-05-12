@@ -212,6 +212,7 @@ void TSTimeParser::FlushUnsortedData() {
         TFOut outstream(fn);
         time_record.Save(outstream);
     }
+    RawTimeData.Clr();
     std::cout<< "done flushing" << std::endl;
 }
 

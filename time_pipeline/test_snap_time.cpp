@@ -7,7 +7,7 @@ int main( int argc, char* argv[] ){
 		std::cout << "expect schema filename" << std::endl;
 		exit(0);
 	}
-	std::string filename(argv[1]);
+	TStr filename(argv[1]);
 	TTSchema schema;
 	schema.ReadSchemaFile(filename);
 	schema.PrintSchema();

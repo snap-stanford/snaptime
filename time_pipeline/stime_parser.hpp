@@ -24,10 +24,13 @@ private:
 	class DirCrawlMetaData {
 	public:
 		TTIdVec RunningIDVec;
-		TTime time;
+		TTime ts;
 		bool TimeSet;
 	public:
-		DirCrawlMetaData(int numIds) : RunningIDVec(numIds), time(0), TimeSet(0) {}
+		DirCrawlMetaData(int numIds) : RunningIDVec(numIds){
+			ts = 0;
+			TimeSet = false;
+		}
 	};
 public:
 	TSTimeParser(TStr Dir, TStr SchemaFile, TUInt MaxCapacity = TUInt::Mx) {
@@ -47,21 +50,26 @@ public:
 		if (!TDir::Exists(Directory)) TDir::GenDir(Directory);
 	}
 	//create initial primary hierarhcy
-	void ReadEventFile(std::string FileName);
-
+	void ReadEventFile(std::string FileName); // old method, TODO delete
+	// crawl through Directory given a schema
+	void ReadRawData(TStr DirName);
 	void FlushUnsortedData();
 	void SortBucketedData(bool ClearData = true);
 
 private:
+
+	// Reading data
+	void ExploreDataDirs(TStr & DirName, DirCrawlMetaData dcmd, int DirIndex);
+	void ReadEventDataFile(TStr & FileName, DirCrawlMetaData & dcmd);
+	void AddDataValue(TTIdVec & IDVector, TStr & value, TTime ts);
+	void AdjustDcmd(TStr & Name, TStr & Behavior, DirCrawlMetaData & dcmd);
+
+	// Saving Data
 	void GetPrimDirNames(TTIdVec & IdVec, TStrV& result);
 	TStr CreatePrimDirs(TTIdVec & IdVec);
-	
-
-private:
-	// static TVec<TStr> readCSVLine(std::string line, char delim=',');
 	static TStr CreateIDVFileName(TTIdVec & IdVec);
-	static void SortBucketedDataDir(TStr DirPath, TType type, bool ClearData);
-	static void TraverseAndSortData(TStr Dir, int level, bool ClearData);
+	void SortBucketedDataDir(TStr DirPath, bool ClearData);
+	void TraverseAndSortData(TStr Dir, int level, bool ClearData);
 
 	template<class TVal>
 	static void WriteSortedData(TStr DirPath, TTIdVec& IDs, TTRawDataV& SortedData, TVal (*val_convert)(TStr),

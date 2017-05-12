@@ -1,7 +1,7 @@
-//
 void TSTimeParser::ReadRawData(TStr DirName) {
     DirCrawlMetaData dcmd (schema.IdNames.Len());
     ExploreDataDirs(DirName, dcmd, 0);
+    FlushUnsortedData();
 }
 
 void TSTimeParser::ExploreDataDirs(TStr & DirName, DirCrawlMetaData dcmd, int DirIndex) {
@@ -11,11 +11,10 @@ void TSTimeParser::ExploreDataDirs(TStr & DirName, DirCrawlMetaData dcmd, int Di
 
     //base case: at the end of the dirs, so this is an event file. Parse it
     if (DirIndex == schema.Dirs.Len()-1) {
-        ReadEventFile(DirName, dcmd);
+        ReadEventDataFile(DirName, dcmd);
         return;
     }
     // otherwise, we're at a directory. Adjust the running id vec if necessary
-    TStr DirBehavior = schema.Dirs[DirIndex];
     TStrV FnV;
     TTimeFFile::GetAllFiles(DirName, FnV, true); // get the directories
     for (int i=0; i< FnV.Len(); i++) {
@@ -23,22 +22,96 @@ void TSTimeParser::ExploreDataDirs(TStr & DirName, DirCrawlMetaData dcmd, int Di
     }
 }
 
+// read data file as according to schema
+// dcmd passed in was a copy up above, so ok to modify
+void TSTimeParser::ReadEventDataFile(TStr & FileName, DirCrawlMetaData & dcmd) {
+    std::ifstream infile(FileName.CStr());
+    AssertR(infile.is_open(), "could not open eventfile");
+    std::cout << "reading file " << FileName.CStr() << std::endl;
+
+    std::string line;
+    while(std::getline(infile, line)) {
+        TVec<TStr> row = TCSVParse::readCSVLine(line);
+        if (CurrNumRecords % 1000 == 0) std::cout << "lines read " << CurrNumRecords << std::endl;
+        AssertR(schema.FileSchema.Len() == row.Len(), "event file has incorrect number of columns");
+
+        TVec<TPair<TStr, TStr>> sensor_vals; // <(SensorName, SensorValue), ...>
+        // iterate through column values
+        for (int i=0; i<row.Len(); i++) {
+            TPair<TStr, TColType> col = schema.FileSchema[i];
+            TStr IDName = col.GetVal1();
+            TColType ColBehavior = col.GetVal2();
+            TStr DataVal = row[i];
+            //deal with ID and time first
+            switch(ColBehavior) {
+                case NO_ID:
+                    break;
+                case TIME:
+                    dcmd.ts = schema.ConvertTime(DataVal);
+                    dcmd.TimeSet = true;
+                    break;
+                case ID:
+                    //add DataVal as the ID value for IDName
+                    AdjustDcmd(DataVal, IDName, dcmd);
+                    break;
+                case SENSOR:
+                    TPair<TStr, TStr> sensor(IDName, DataVal);
+                    sensor_vals.Add(sensor);
+                    break;
+            }
+        }
+        AssertR(dcmd.TimeSet, "invalid schema: time is never set");
+        TStr sensorKey("SENSOR");
+        //split by sensor
+        for (int i=0; i<sensor_vals.Len(); i++) {
+            TStr sensorName = sensor_vals[i].GetVal1();
+            TStr sensorValue = sensor_vals[i].GetVal2();
+            TTIdVec IDVector = dcmd.RunningIDVec;
+            AssertR(schema.IDName_To_Index.IsKey(sensorKey), "invalid schema");
+            TInt SensorIndex = schema.IDName_To_Index.GetDat(sensorKey);
+            if (IDVector[SensorIndex] == TStr::GetNullStr()) {
+                // only replace sensor in ID vec if not already there
+                IDVector[SensorIndex] = sensorName;
+            }
+            AddDataValue(IDVector, sensorValue, dcmd.ts); //adds value and flushes if necessary
+        }
+    }
+}
+
+void TSTimeParser::AddDataValue(TTIdVec & IDVector, TStr & value, TTime ts) {
+    TTRawData new_tv_pair = TTRawData(ts, value);
+    if (!RawTimeData.IsKey(IDVector)) {
+        TVec<TTRawData> new_time_data;
+        new_time_data.Add(new_tv_pair);
+        RawTimeData.AddDat(IDVector, new_time_data);
+    } else {
+        RawTimeData.GetDat(IDVector).Add(new_tv_pair);
+    }
+    CurrNumRecords++;
+    if (CurrNumRecords >= MaxRecordCapacity) {
+        std::cout << MaxRecordCapacity << std::endl;
+        FlushUnsortedData();
+        CurrNumRecords = 0;
+    }
+}
+
+
 /*
  * DirBehavior can be:
  *  NULL: do nothing
  *  TIME: set dcmd's time
  *  DEFAULT: treat DirName as an ID under DirBehavior's IDName
  */
-void AdjustDcmd(TStr & DirName, TStr & DirBehavior, DirCrawlMetaData & dcmd) {
-    if (DirBehavior == TStr("NULL")) return;
-    if (DirBehavior == TStr("TIME")) {
-        dcmd.time = ConvertTime(DirName);
-        TimeSet = true;
+void TSTimeParser::AdjustDcmd(TStr & Name, TStr & Behavior, DirCrawlMetaData & dcmd) {
+    if (Behavior == TStr("NULL")) return;
+    if (Behavior == TStr("TIME")) {
+        dcmd.ts = schema.ConvertTime(Name);
+        dcmd.TimeSet = true;
     } else {
-        AssertR(schema.IDName_To_Index.IsKey(DirBehavior), "Invalid schema");
-        int IDIndex = IDName_To_Index[DirBehavior];
-        AssertR(dcmd[IDIndex] == TStr::GetNullStr(), "Invalid schema: repeat IDs");
-        dcmd[IDIndex] = DirName;
+        AssertR(schema.IDName_To_Index.IsKey(Behavior), "Invalid schema");
+        int IDIndex = schema.IDName_To_Index.GetDat(Behavior);
+        AssertR(dcmd.RunningIDVec[IDIndex] == TStr::GetNullStr(), "Invalid schema: repeat IDs");
+        dcmd.RunningIDVec[IDIndex] = Name;
     }
 }
 
@@ -138,7 +211,7 @@ void TSTimeParser::SortBucketedData(bool ClearData) {
     std::cout << Directory.CStr() << std::endl;
     TStrV FnV;
     int hierarchySize = ModHierarchy.Len() +1 ;// including the top level directory
-    TSTimeParser::TraverseAndSortData(Directory, hierarchySize, ClearData);
+    TraverseAndSortData(Directory, hierarchySize, ClearData);
 
 }
 
@@ -149,7 +222,7 @@ void TSTimeParser::SortBucketedData(bool ClearData) {
 void TSTimeParser::TraverseAndSortData(TStr Dir, int level, bool ClearData) {
     AssertR(level >= 0, "invalid level");
     if (level == 0) {
-        SortBucketedDataDir(Dir, INTEGER, ClearData);
+        SortBucketedDataDir(Dir, ClearData);
         std::cout<< Dir.CStr() << std::endl;
     } else {
         TStrV FnV;
@@ -161,7 +234,7 @@ void TSTimeParser::TraverseAndSortData(TStr Dir, int level, bool ClearData) {
 }
 
 // TODO: what if the vector is too big to hold in memory
-void TSTimeParser::SortBucketedDataDir(TStr DirPath, TType type, bool ClearData) {
+void TSTimeParser::SortBucketedDataDir(TStr DirPath, bool ClearData) {
     TStrV FnV;
     // retrieve filenames
     TFFile::GetFNmV(DirPath, TStrV::GetV("bin"), false, FnV);
@@ -174,6 +247,14 @@ void TSTimeParser::SortBucketedDataDir(TStr DirPath, TType type, bool ClearData)
         BucketedData.AddV(unsorted_record.TimeData);
     }
     TTIdVec IDs = unsorted_record.KeyIds;
+
+    // get type
+    TStr sensorName = IDs[schema.IDName_To_Index.GetDat(TStr("SENSOR"))];
+    TType type = schema.defaultType;
+    if (schema.SensorType.IsKey(sensorName)) {
+        type = schema.SensorType.GetDat(sensorName);
+    }
+
     RawDataCmp comparator;
     BucketedData.SortCmp(comparator);
     switch (type) {

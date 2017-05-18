@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <time.h>
+#include <ctime>
 #include <sstream> 
 
 #include "Snap.h"

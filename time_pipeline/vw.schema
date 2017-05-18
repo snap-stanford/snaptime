@@ -1,0 +1,18 @@
+START FileHierarchy
+NULL, SENSOR
+END FileHierarchy
+
+START Schema
+
+DateTime, TIME
+DriverID, ID
+Value, SENSOR
+END Schema
+
+START SchemaTypes
+DEFAULT, FLOAT
+END SchemaTypes
+
+START TimeConvert
+%d.%m.%Y %H:%M:%S
+END TimeConvert

@@ -1,5 +1,5 @@
-CC = /usr/local/bin/gcc-7
-# CC = g++
+#CC = /usr/local/bin/gcc-7
+CC = g++
 CXXFLAGS += -std=c++11 -fopenmp -pg -Wall
 LDFLAGS += -lrt
 

@@ -3,7 +3,7 @@
 
 int main( int argc, char* argv[] ){
 
-	if (argc != 4) {
+	if (argc != 5) {
 		std::cout << "wrong num args" << std::endl;
 		exit(0);
 	}
@@ -13,13 +13,17 @@ int main( int argc, char* argv[] ){
 	TStr InputDir(argv[2]);
 	TStr OutputDir(argv[3]);
 
+	TStr NumThreads(argv[4]);
+
+
 	TVec<int> ModHierarchy;
 	ModHierarchy.Add(29);
 	ModHierarchy.Add(13);
 
-	TSParserManager manager(OutputDir, SchemaFile, ModHierarchy, 1, 1000000);
+	TSParserManager manager(OutputDir, SchemaFile, ModHierarchy, NumThreads.GetInt(), 1000000);
 	manager.ReadRawData(InputDir);
-	manager.SortBucketedData();
+	time_t t_raw = time(0);
+	//manager.SortBucketedData();
 
 	// TSTimeParser parser(OutputDir, SchemaFile, ModHierarchy, 1000000);
 	// parser.ReadRawData(InputDir);

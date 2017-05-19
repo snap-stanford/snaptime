@@ -97,14 +97,14 @@ void TTSchema::ReadFileHierarchy(std::ifstream & infile) {
 		std::string delim = line.substr(delim_key.size());
 		AssertR(delim.length() == 1, "delimiter must be only one character");
 		FileDelimiter = delim[0];
-    	success = TTSchema::GetNextSchemaLine(infile, line); // read the directory list
-    	AssertR(success, "Expected hierarchy list or 'END FileHierarchy'");
-    	if (line == "END FileHierarchy") {
-            	Dirs.Add("NULL");
-            	return;
-    	}
+		success = TTSchema::GetNextSchemaLine(infile, line); // read the directory list
+		AssertR(success, "Expected hierarchy list or 'END FileHierarchy'");
+		if (line == "END FileHierarchy") {
+        	    	Dirs.Add("NULL");
+            		return;
+    		}
 	}
-	Dirs = TCSVParse::readCSVLine(line, ',', true);
+	TCSVParse::readCSVLine(line, Dirs, ',', true);
 	for (int i=0; i<Dirs.Len(); i++) {
 		TStr dir = Dirs[i];
 		if (dir == "TIME") {
@@ -126,7 +126,8 @@ void TTSchema::ReadDataSchema(std::ifstream & infile) {
 	int rowNum = 0;
 	int sensorNum = 0;
 	while (line != "END Schema") {
-		TVec<TStr> row = TCSVParse::readCSVLine(line, ',', true);
+		TVec<TStr> row;
+		TCSVParse::readCSVLine(line, row, ',', true);
 		AssertR(row.Len() == 2, TStr("Invalid hierarchy row: ") + TStr(line.c_str()));
 		TStr val = row[0];
 		TStr type_str = row[1];
@@ -166,7 +167,8 @@ void TTSchema::ReadSchemaTypes(std::ifstream & infile) {
 	bool success = TTSchema::GetNextSchemaLine(infile, line);
 	AssertR(success, "Incomplete Schema Type section");
 	while (line != "END SchemaTypes") {
-		TVec<TStr> row = TCSVParse::readCSVLine(line, ',', true);
+		TVec<TStr> row;
+		TCSVParse::readCSVLine(line, row, ',', true);
 		AssertR(row.Len()==2, "Invalid row in schema types section");
 		TStr sensorName = row[0];
 		// get sensor type

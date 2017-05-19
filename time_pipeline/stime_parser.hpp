@@ -37,7 +37,7 @@ private:
 	TStr OutputDirectory; // OutputDirectory to start file structure.
 	TUInt CurrNumRecords;
 	TUInt MaxRecordCapacity; // records to read before flushing files
-	TTSchema* Schema; // pointer to schema
+	TTSchema Schema; // pointer to schema
 
 	omp_lock_t* file_sys_lock; // pointer to the file system lock
 public:
@@ -47,11 +47,10 @@ public:
 		CurrNumRecords = 0;
 	}
 
-	TSTimeParser(TStr OutputDir, TTSchema* _Schema, TVec<int> _ModHierarchy,
+	TSTimeParser(TStr OutputDir, TStr SchemaFile, TVec<int> _ModHierarchy,
 		omp_lock_t* lock_p, TUInt MaxCapacity) {
-
+		Schema.ReadSchemaFile(SchemaFile);
 		file_sys_lock = lock_p;
-		Schema = _Schema;
 		ModHierarchy = _ModHierarchy;
 		MaxRecordCapacity = MaxCapacity;
 		OutputDirectory = OutputDir;
@@ -63,7 +62,7 @@ public:
 	void FlushUnsortedData();
 	// crawl through OutputDirectory given a schema
 	// void ReadRawData(TStr DirName);
-	void ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd);
+	void ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd);
 
 private:
 

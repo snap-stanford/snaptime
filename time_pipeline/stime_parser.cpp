@@ -13,52 +13,59 @@ void TDirCrawlMetaData::AdjustDcmd(const TStr & Name, const TStr & Behavior, TDi
 
 // read data file as according to schema
 // dcmd passed in was a copy up above, so ok to modify
-void TSTimeParser::ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd) {
+void TSTimeParser::ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd) {
     std::ifstream infile(FileName.CStr());
     AssertR(infile.is_open(), "could not open eventfile");
-    std::cout << "reading file " << FileName.CStr() << std::endl;
-
+    TStr EmptyStr = TStr("");
     std::string line;
     while(std::getline(infile, line)) {
-        TVec<TStr> row = TCSVParse::readCSVLine(line, Schema->FileDelimiter);
-        if (CurrNumRecords % 1000 == 0) std::cout << "lines read " << CurrNumRecords << std::endl;
-        AssertR(Schema->FileSchema.Len() == row.Len(), "event file has incorrect number of columns");
+	if (CurrNumRecords % 100000 == 0) std::cout << omp_get_thread_num() << " reading " << CurrNumRecords << std::endl;
+        TVec<std::string> row;
+        char delim;
+        delim= Schema.FileDelimiter;
+        std::istringstream is(line);
+        std::string temp;
+        while(getline(is, temp, delim)) {
+             std::string val = TCSVParse::trim(temp);
+             row.Add(val);
+        }
 
-        TVec<TPair<TStr, TStr>> sensor_vals; // <(SensorName, SensorValue), ...>
+	TVec<TPair<TStr, TStr>> sensor_vals; // <(SensorName, SensorValue), ...>
+        AssertR(Schema.FileSchema.Len() == row.Len(), "event file has incorrect number of columns");	
         // iterate through column values
         for (int i=0; i<row.Len(); i++) {
-            TPair<TStr, TColType> col = Schema->FileSchema[i];
-            TStr IDName = col.GetVal1();
+            TPair<TStr, TColType> col = Schema.FileSchema[i];
+            //TStr IDName = col.GetVal1();
             TColType ColBehavior = col.GetVal2();
-            TStr DataVal = row[i];
-            if (DataVal == TStr("")) continue; //don't deal with it if empty
-            //deal with ID and time first
-            switch(ColBehavior) {
-                case NO_ID:
-                    break;
-                case TIME:
-                    dcmd.ts = Schema->ConvertTime(DataVal);
-                    dcmd.TimeSet = true;
-                    break;
-                case ID:
-                    //add DataVal as the ID value for IDName
-                    TDirCrawlMetaData::AdjustDcmd(DataVal, IDName, dcmd, Schema);
-                    break;
-                case SENSOR:
-                    TPair<TStr, TStr> sensor(IDName, DataVal);
-                    sensor_vals.Add(sensor);
-                    break;
+            TStr DataVal = TStr(row[i].c_str());
+            if (row[i].length() > 0) {
+            	//deal with ID and time first
+           	 switch(ColBehavior) {
+                	case NO_ID:
+                   	 	break;
+                	case TIME:
+                    		dcmd.ts = Schema.ConvertTime(TStr(row[i].c_str()));
+                    		dcmd.TimeSet = true;
+                    		break;
+                	case ID:
+                    		//add DataVal as the ID value for IDName
+                    		TDirCrawlMetaData::AdjustDcmd(DataVal, Schema.FileSchema[i].GetVal1(), dcmd, &Schema);
+                    		break;
+               		 case SENSOR:
+                   		sensor_vals.Add(TPair<TStr, TStr>(Schema.FileSchema[i].GetVal1(), DataVal));
+                   	 	break;
+		}
             }
-        }
+	}
         AssertR(dcmd.TimeSet, "invalid schema: time is never set");
         TStr sensorKey("SENSOR");
-        //split by sensor
+	//split by sensor
         for (int i=0; i<sensor_vals.Len(); i++) {
             TStr sensorName = sensor_vals[i].GetVal1();
             TStr sensorValue = sensor_vals[i].GetVal2();
             TTIdVec IDVector = dcmd.RunningIDVec;
-            AssertR(Schema->IDName_To_Index.IsKey(sensorKey), "invalid schema");
-            TInt SensorIndex = Schema->IDName_To_Index.GetDat(sensorKey);
+            AssertR(Schema.IDName_To_Index.IsKey(sensorKey), "invalid schema");
+            TInt SensorIndex = Schema.IDName_To_Index.GetDat(sensorKey);
             if (IDVector[SensorIndex] == TStr::GetNullStr()) {
                 // only replace sensor in ID vec if not already there
                 IDVector[SensorIndex] = sensorName;

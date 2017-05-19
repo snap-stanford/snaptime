@@ -7,7 +7,8 @@ void TSParserManager::ReadRawData(TStr DirName) {
         int thread_num = omp_get_thread_num();
         /* read each event file */
         TStr fn = EventFileQueue[i].GetVal1();
-        TDirCrawlMetaData dcmd = EventFileQueue[i].GetVal2();
+	std::cout << "Thread " << thread_num << "Reading " << fn.CStr() << std::endl;
+	TDirCrawlMetaData dcmd = EventFileQueue[i].GetVal2();
         parsers[thread_num].ReadEventDataFile(fn, dcmd);
     }
     // perform last flushes

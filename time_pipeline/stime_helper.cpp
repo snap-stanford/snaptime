@@ -15,8 +15,7 @@ void TTimeFFile::GetAllFiles(TStr& Path, TStrV& FnV, bool OnlyDirs){
   closedir(dir);
 }
 
-TVec<TStr> TCSVParse::readCSVLine(std::string line, char delim, bool TrimWs) {
-    TVec<TStr> vec_line;
+void TCSVParse::readCSVLine(std::string line, TVec<TStr> & result, char delim, bool TrimWs) {
     std::istringstream is(line);
     std::string temp;
     while(getline(is, temp, delim)) {
@@ -24,9 +23,8 @@ TVec<TStr> TCSVParse::readCSVLine(std::string line, char delim, bool TrimWs) {
       if(TrimWs) {
         val = trim(val);
       }
-      vec_line.Add(TStr(val.c_str()));
+      result.Add(TStr(val.c_str()));
     }
-    return vec_line;
 }
 
 std::string TCSVParse::trim(std::string const& str)

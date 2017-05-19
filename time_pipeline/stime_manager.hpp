@@ -38,7 +38,7 @@ public:
 		omp_init_lock(&filesys_lock);
 		//create parsers
 		for (int i=0; i<NumThreads; i++) {
-			parsers.Add(TSTimeParser(_OutputDir, &Schema, _MHierarchy, &filesys_lock, MaxParserCapacity));
+			parsers.Add(TSTimeParser(_OutputDir, SchemaFile, _MHierarchy, &filesys_lock, MaxParserCapacity));
 		}
 	}
 

@@ -8,7 +8,7 @@ public:
 
 class TCSVParse {
 public:
-	static TVec<TStr> readCSVLine(std::string line, char delim=',', bool TrimWs = true);
+	static void readCSVLine(std::string line, TVec<TStr> & result, char delim=',', bool TrimWs = true);
 	static std::string trim(const std::string & str);
 	static TStr CreateIDVFileName(const TTIdVec & IdVec);
 };

@@ -8,7 +8,7 @@ void TSTimeParser::ReadEventDataFile(const TStr & FileName, DirCrawlMetaData & d
 
     std::string line;
     while(std::getline(infile, line)) {
-        TVec<TStr> row = TCSVParse::readCSVLine(line);
+        TVec<TStr> row = TCSVParse::readCSVLine(line, schema.FileDelimiter);
         if (CurrNumRecords % 1000 == 0) std::cout << "lines read " << CurrNumRecords << std::endl;
         AssertR(Schema->FileSchema.Len() == row.Len(), "event file has incorrect number of columns");
 

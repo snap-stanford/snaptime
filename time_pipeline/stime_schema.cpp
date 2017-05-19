@@ -91,6 +91,19 @@ void TTSchema::ReadFileHierarchy(std::ifstream & infile) {
 		Dirs.Add("NULL");
 		return;
 	}
+	// option for delimiter
+	std::string delim_key("DELIM:");
+	if (TStr(line).IsPrefix(delim_key)) {
+		std::string delim = line.substr(delim_key.size());
+		AssertR(delim.length() == 1, "delimiter must be only one character");
+		FileDelimiter = delim[0];
+        	success = TTSchema::GetNextSchemaLine(infile, line); // read the directory list
+        	AssertR(success, "Expected hierarchy list or 'END FileHierarchy'");
+        	if (line == "END FileHierarchy") {
+                	Dirs.Add("NULL");
+                	return;
+        	}
+	}
 	Dirs = TCSVParse::readCSVLine(line, ',', true);
 	for (int i=0; i<Dirs.Len(); i++) {
 		TStr dir = Dirs[i];

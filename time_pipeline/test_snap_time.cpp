@@ -7,7 +7,9 @@ int main( int argc, char* argv[] ){
 		std::cout << "wrong num args" << std::endl;
 		exit(0);
 	}
+	time_t t_start = time(0);
 	TStr SchemaFile(argv[1]);
+	time_t t_schema = time(0);
 	TStr InputDir(argv[2]);
 	TStr OutputDir(argv[3]);
 
@@ -15,9 +17,14 @@ int main( int argc, char* argv[] ){
 	ModHierarchy.Add(29);
 	ModHierarchy.Add(13);
 
-	TSTimeParser parser(OutputDir, SchemaFile, ModHierarchy, 100000);
+	TSTimeParser parser(OutputDir, SchemaFile, ModHierarchy, 1000000);
 	parser.ReadRawData(InputDir);
+	time_t t_raw = time(0);
 	parser.SortBucketedData(true);
+	time_t t_pass = time(0);
+
+	std::cout << "Start: " << (long long) t_start << ". Schema: " << (long long) t_schema;
+	std::cout << ". First Pass: " << (long long) t_raw << ". Finished: " << (long long) t_pass << std::endl;
 
 	// TStr dirname = TStr(argv[1]);
 	// std::string event_file(argv[2]);

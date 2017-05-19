@@ -1,4 +1,5 @@
-import os  
+import os
+import csv
 
 def getType(val):
 	if val[0] == 'f' or val[0] == 't':
@@ -22,7 +23,7 @@ def getTypes(directory):
 					break
 	return types
 
-def writeOutput(outputDir, data):
+def writeOutput(fn, data):
 	with open(fn, 'w+') as ofile:
 		for row in data:
 			ofile.write(row)
@@ -30,6 +31,6 @@ def writeOutput(outputDir, data):
 if __name__ == "__main__":
 	assert len(sys.argv == 3), "wrong number of arguments"
 	input_dir = sys.argv[1]
-	output_dir = sys.argv[2]
+	output_fn = sys.argv[2]
 	types = getTypes(input_dir)
-	writeOutput(output_dir, types)
+	writeOutput(output_fn, types)

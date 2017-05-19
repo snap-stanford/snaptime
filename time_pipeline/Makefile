@@ -1,5 +1,5 @@
 CC = g++
-CXXFLAGS += -std=c++11 -pg -Wall
+CXXFLAGS += -std=c++11 -fopenmp -pg -Wall
 LDFLAGS += -lrt
 
 SNAP = ../../../snap/snap-core

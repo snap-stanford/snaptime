@@ -1,14 +1,26 @@
+void TDirCrawlMetaData::AdjustDcmd(const TStr & Name, const TStr & Behavior, TDirCrawlMetaData & dcmd, const TTSchema* schema) {
+    if (Behavior == TStr("NULL")) return;
+    if (Behavior == TStr("TIME")) {
+        dcmd.ts = schema->ConvertTime(Name);
+        dcmd.TimeSet = true;
+    } else {
+        AssertR(schema->IDName_To_Index.IsKey(Behavior), "Invalid schema");
+        int IDIndex = schema->IDName_To_Index.GetDat(Behavior);
+        dcmd.RunningIDVec[IDIndex] = Name;
+    }
+}
+
 
 // read data file as according to schema
 // dcmd passed in was a copy up above, so ok to modify
-void TSTimeParser::ReadEventDataFile(const TStr & FileName, DirCrawlMetaData & dcmd) {
+void TSTimeParser::ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd) {
     std::ifstream infile(FileName.CStr());
     AssertR(infile.is_open(), "could not open eventfile");
     std::cout << "reading file " << FileName.CStr() << std::endl;
 
     std::string line;
     while(std::getline(infile, line)) {
-        TVec<TStr> row = TCSVParse::readCSVLine(line, schema.FileDelimiter);
+        TVec<TStr> row = TCSVParse::readCSVLine(line, Schema->FileDelimiter);
         if (CurrNumRecords % 1000 == 0) std::cout << "lines read " << CurrNumRecords << std::endl;
         AssertR(Schema->FileSchema.Len() == row.Len(), "event file has incorrect number of columns");
 
@@ -30,7 +42,7 @@ void TSTimeParser::ReadEventDataFile(const TStr & FileName, DirCrawlMetaData & d
                     break;
                 case ID:
                     //add DataVal as the ID value for IDName
-                    TDirCrawlMetaData::AdjustDcmd(DataVal, IDName, dcmd, schema);
+                    TDirCrawlMetaData::AdjustDcmd(DataVal, IDName, dcmd, Schema);
                     break;
                 case SENSOR:
                     TPair<TStr, TStr> sensor(IDName, DataVal);

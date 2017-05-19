@@ -65,8 +65,8 @@ public:
 	}
 
 	void ReadSchemaFile(TStr FileName);
-	TTime ConvertTime(TStr timeVal);
-	void PrintSchema();
+	TTime ConvertTime(TStr timeVal) const;
+	void PrintSchema() const;
 private:
 	void AddIDName(TStr & IdName);
 	static bool GetNextSchemaLine(std::ifstream & infile, std::string & line);

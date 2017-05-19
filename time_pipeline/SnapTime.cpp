@@ -2,3 +2,5 @@
 #include "stime_helper.cpp"
 #include "stime_parser.cpp"
 #include "stime_schema.cpp"
+#include "stime_manager.cpp"
+#include "stime_sorter.cpp"

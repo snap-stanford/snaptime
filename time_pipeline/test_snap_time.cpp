@@ -17,16 +17,20 @@ int main( int argc, char* argv[] ){
 	ModHierarchy.Add(29);
 	ModHierarchy.Add(13);
 
-	TSTimeParser parser(OutputDir, SchemaFile, ModHierarchy, 1000000);
-	parser.ReadRawData(InputDir);
-	time_t t_raw = time(0);
-	parser.SortBucketedData(true);
-	time_t t_pass = time(0);
+	TSParserManager manager(OutputDir, SchemaFile, ModHierarchy, 1, 1000000);
+	manager.ReadRawData(InputDir);
+	manager.SortBucketedData();
 
-	std::cout << "Start: " << (long long) t_start << ". Schema: " << (long long) t_schema;
-	std::cout << ". First Pass: " << (long long) t_raw << ". Finished: " << (long long) t_pass << std::endl;
+	// TSTimeParser parser(OutputDir, SchemaFile, ModHierarchy, 1000000);
+	// parser.ReadRawData(InputDir);
+	// time_t t_raw = time(0);
+	// parser.SortBucketedData(true);
+	// time_t t_pass = time(0);
 
-	// TStr dirname = TStr(argv[1]);
+	// std::cout << "Start: " << (long long) t_start << ". Schema: " << (long long) t_schema;
+	// std::cout << ". First Pass: " << (long long) t_raw << ". Finished: " << (long long) t_pass << std::endl;
+
+	// // TStr dirname = TStr(argv[1]);
 	// std::string event_file(argv[2]);
 	// TVec<int> ModHierarchy;
 	// ModHierarchy.Add(29);

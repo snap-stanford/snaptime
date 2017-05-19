@@ -1,6 +1,33 @@
 #ifndef STIME_PARSER_H
 #define STIME_PARSER_H
 
+/*
+ * Class: TDirCrawlMetaData
+ * Keeps ID and time information when iterating through the raw files and directories
+ */
+class TDirCrawlMetaData {
+public:
+	TTIdVec RunningIDVec;
+	TTime ts;
+	bool TimeSet;
+public:
+	TDirCrawlMetaData() {
+		ts = 0;
+		TimeSet = false;
+	}
+	TDirCrawlMetaData(int numIds) : RunningIDVec(numIds){
+		ts = 0;
+		TimeSet = false;
+	}
+	/* Static method to adjust a DCMD
+	 * If Behavior is:
+	 * 		NULL: do nothing
+	 *		TIME: set dcmd's time to Name converted as timestamp
+	 *		default: treat Name as ID under Behavior's IDName
+	 */
+	static void AdjustDcmd(const TStr & Name, const TStr & Behavior, TDirCrawlMetaData & dcmd, const TTSchema* schema);
+};
+
 class TSTimeParser {
 public:
 	// Leave as TStr to TStr for now
@@ -20,8 +47,8 @@ public:
 		CurrNumRecords = 0;
 	}
 
-	TSTimeParser(TStr OutputDir, TSchema* _Schema, TVec<int> _ModHierarchy,
-		omp_lock_t* lock_p, TUInt MaxCapacity) : {
+	TSTimeParser(TStr OutputDir, TTSchema* _Schema, TVec<int> _ModHierarchy,
+		omp_lock_t* lock_p, TUInt MaxCapacity) {
 
 		file_sys_lock = lock_p;
 		Schema = _Schema;
@@ -36,17 +63,16 @@ public:
 	void FlushUnsortedData();
 	// crawl through OutputDirectory given a schema
 	// void ReadRawData(TStr DirName);
-	void ReadEventDataFile(const TStr & FileName, DirCrawlMetaData & dcmd);
+	void ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd);
 
 private:
 
 	// Reading data
-	// void ExploreDataDirs(TStr & DirName, DirCrawlMetaData dcmd, int DirIndex);
-	void ReadEventDataFile(const TStr & FileName, DirCrawlMetaData & dcmd);
+	// void ExploreDataDirs(TStr & DirName, TDirCrawlMetaData dcmd, int DirIndex);
 	void AddDataValue(const TTIdVec & IDVector, TStr & value, TTime ts);
 
 	// Saving Data
-	void GetPrimDirNames(TTIdVec & IdVec, TStrV& result);
+	void GetPrimDirNames(const TTIdVec & IdVec, TStrV& result);
 	TStr CreatePrimDirs(TTIdVec & IdVec);
 
 };

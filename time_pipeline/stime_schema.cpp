@@ -1,5 +1,5 @@
 // TODO: not sure if this matters, but using format string from user could be a security bug
-TTime TTSchema::ConvertTime(TStr timeVal) {
+TTime TTSchema::ConvertTime(TStr timeVal) const {
 	if (!IsTimeStr) {
 		return timeVal.GetUInt64();
 	}
@@ -10,7 +10,7 @@ TTime TTSchema::ConvertTime(TStr timeVal) {
 	return (TTime) t;
 }
 
-void TTSchema::PrintSchema() {
+void TTSchema::PrintSchema() const {
 	std::cout << "IdNames" << std::endl;
 	for (int i=0; i<IdNames.Len(); i++) {
 		std::cout << IdNames[i].CStr() << ", ";
@@ -93,7 +93,7 @@ void TTSchema::ReadFileHierarchy(std::ifstream & infile) {
 	}
 	// option for delimiter
 	std::string delim_key("DELIM:");
-	if (TStr(line).IsPrefix(delim_key)) {
+	if (TStr(line.c_str()).IsPrefix(delim_key.c_str())) {
 		std::string delim = line.substr(delim_key.size());
 		AssertR(delim.length() == 1, "delimiter must be only one character");
 		FileDelimiter = delim[0];

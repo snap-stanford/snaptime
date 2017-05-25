@@ -229,5 +229,12 @@ void TTSchema::ReadSchemaFile(TStr filename) {
 	if (!hierarchyComplete) {
 		Dirs.Add("NULL"); // add default file hierarchy: just bare files
 	}
+	divideFileSchemaByType();
+}
 
+void TTSchema::divideFileSchemaByType() {
+	for (int i = 0; i < FileSchema.Len(); i++) {
+		TPair<TStr, TColType> col = FileSchema[i];
+		FileSchemaIndexList[(int)col.GetVal2()].Add(TInt(i));
+	}
 }

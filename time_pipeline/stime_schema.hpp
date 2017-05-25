@@ -40,6 +40,8 @@ public:
 	 * < ("TimeData", TIME), ("BogusID", NO_ID), ("Car Model", ID), ("Acceleration", SENSOR)>
 	 */
 	 TVec<TPair<TStr, TColType> > FileSchema;
+	 // For each behavior, have the indices of the relevant column numbers
+	 TVec<TVec<TInt> > FileSchemaIndexList;
 
 	 /*
 	  * hash from sensor name to type. If not in the hash, assume TFlt
@@ -57,7 +59,7 @@ public:
 	 TBool HasTime; //time column is specified
 
 public:
-	TTSchema() {
+	TTSchema() : FileSchemaIndexList(4) {
 		IsTimeStr = false;
 		HasTime = false;
 		defaultType = FLOAT;
@@ -67,6 +69,8 @@ public:
 	void ReadSchemaFile(TStr FileName);
 	TTime ConvertTime(TStr timeVal) const;
 	void PrintSchema() const;
+
+
 private:
 	void AddIDName(TStr & IdName);
 	static bool GetNextSchemaLine(std::ifstream & infile, std::string & line);
@@ -74,6 +78,7 @@ private:
 	void ReadFileHierarchy(std::ifstream & infile);
 	void ReadDataSchema(std::ifstream & infile);
 	void ReadSchemaTypes(std::ifstream & infile);
+	void divideFileSchemaByType();
 
 };
 #endif

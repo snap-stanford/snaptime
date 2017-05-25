@@ -71,6 +71,8 @@ private:
 	// void ExploreDataDirs(TStr & DirName, TDirCrawlMetaData dcmd, int DirIndex);
 	void AddDataValue(const TTIdVec & IDVector, TStr & value, TTime ts);
 
+	void FlushRunningVectors(TVec<TStrV> &running_sensors, TVec<TTime> & running_times, TTIdVec & running_id);
+
 	// Saving Data
 	void GetPrimDirNames(const TTIdVec & IdVec, TStrV& result);
 	TStr CreatePrimDirs(TTIdVec & IdVec);

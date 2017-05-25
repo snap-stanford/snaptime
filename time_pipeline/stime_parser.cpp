@@ -18,54 +18,109 @@ void TSTimeParser::ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd) 
     AssertR(infile.is_open(), "could not open eventfile");
     std::cout << "reading file " << FileName.CStr() << std::endl;
 
+    int num_sensors = Schema->FileSchemaIndexList[SENSOR].Len();
+    /* Create a cached Vector of the running sensors so that we don't keep hitting the hash
+     * running_sensors:
+     * {<values for sensor 1>, <values for sensor 2>, ... } */
+    TVec<TStrV> running_sensors(num_sensors);
+    /* Create a cached vector of all of the running times (one per row) corresponding
+     * to the running_sensors */
+    TVec<TTime> running_times;
+
+    // keep track of the current ID vector. Empty if uninitialized
+    TTIdVec running_id;
+    TTime ts = dcmd.ts; //might not be set yet
+
     std::string line;
     while(std::getline(infile, line)) {
         TVec<TStr> row = TCSVParse::readCSVLine(line, Schema->FileDelimiter);
         if (CurrNumRecords % 1000 == 0) std::cout << "lines read " << CurrNumRecords << std::endl;
         AssertR(Schema->FileSchema.Len() == row.Len(), "event file has incorrect number of columns");
 
-        TVec<TPair<TStr, TStr>> sensor_vals; // <(SensorName, SensorValue), ...>
-        // iterate through column values
-        for (int i=0; i<row.Len(); i++) {
-            TPair<TStr, TColType> col = Schema->FileSchema[i];
-            TStr IDName = col.GetVal1();
-            TColType ColBehavior = col.GetVal2();
-            TStr DataVal = row[i];
-            if (DataVal == TStr("")) continue; //don't deal with it if empty
-            //deal with ID and time first
-            switch(ColBehavior) {
-                case NO_ID:
-                    break;
-                case TIME:
-                    dcmd.ts = Schema->ConvertTime(DataVal);
-                    dcmd.TimeSet = true;
-                    break;
-                case ID:
-                    //add DataVal as the ID value for IDName
-                    TDirCrawlMetaData::AdjustDcmd(DataVal, IDName, dcmd, Schema);
-                    break;
-                case SENSOR:
-                    TPair<TStr, TStr> sensor(IDName, DataVal);
-                    sensor_vals.Add(sensor);
-                    break;
-            }
+        // Adjust ID Vector in dcmd
+        for (int i=0; i<Schema->FileSchemaIndexList[ID].Len(); i++) {
+            TInt col_id = Schema->FileSchemaIndexList[ID][i]; // column index of ID
+            TStr IDName = Schema->FileSchema[col_id].GetVal1();
+            TStr val = row[col_id];
+            // add the ID to the dcmd
+            TDirCrawlMetaData::AdjustDcmd(val, IDName, dcmd, Schema);
         }
-        AssertR(dcmd.TimeSet, "invalid schema: time is never set");
-        TStr sensorKey("SENSOR");
-        //split by sensor
-        for (int i=0; i<sensor_vals.Len(); i++) {
-            TStr sensorName = sensor_vals[i].GetVal1();
-            TStr sensorValue = sensor_vals[i].GetVal2();
-            TTIdVec IDVector = dcmd.RunningIDVec;
-            AssertR(Schema->IDName_To_Index.IsKey(sensorKey), "invalid schema");
-            TInt SensorIndex = Schema->IDName_To_Index.GetDat(sensorKey);
-            if (IDVector[SensorIndex] == TStr::GetNullStr()) {
-                // only replace sensor in ID vec if not already there
-                IDVector[SensorIndex] = sensorName;
-            }
-            AddDataValue(IDVector, sensorValue, dcmd.ts); //adds value and flushes if necessary
+
+        //flush old values of running sensors
+        if (running_times.Len() != 0 && running_id != dcmd.RunningIDVec) {
+            FlushRunningVectors(running_sensors, running_times, running_id);
+            running_id = dcmd.RunningIDVec;
+            // TODO flush values
+        } else if(running_id.Len() == 0) {
+            // not initialized yet
+            running_id = dcmd.RunningIDVec;
+        }
+
+        // Adjust TIME in dcmd
+        if (Schema->FileSchemaIndexList[TIME].Len() > 0) {
+            TInt col_id = Schema->FileSchemaIndexList[TIME][0];
+            TStr val = row[col_id];
+            ts = Schema->ConvertTime(val);
+        }
+        running_times.Add(ts);
+
+
+        // Add sensor values to running
+        for (int i=0; i<Schema->FileSchemaIndexList[SENSOR].Len(); i++) {
+            TInt col_id = Schema->FileSchemaIndexList[SENSOR][i]; // column index of sensor
+            TStr val = row[col_id];
+            running_sensors[i].Add(val);
         }
     }
+    // perform one last flush if necessary
+    if (running_times.Len() != 0) {
+        FlushRunningVectors(running_sensors, running_times, running_id);
+    }
+}
+
+
+void TSTimeParser::FlushRunningVectors(TVec<TStrV> &running_sensors,
+    TVec<TTime> & running_times, TTIdVec & running_id) {
+
+    TStr sensorKey("SENSOR");
+    TInt SensorIndex = Schema->IDName_To_Index.GetDat(sensorKey); // index into ID vector to put sensor val
+
+    TTIdVec IdVector;
+
+    for (int i=0; i< running_sensors.Len(); i++) {
+        // for each sensor ..
+        TStrV & sensor_data = running_sensors[i];
+        AssertR(sensor_data.Len() == running_times.Len(), "current running sensor data not aligned with time vector");
+
+        IdVector = running_id; // make a copy of the id vector
+        TInt col_id = Schema->FileSchemaIndexList[SENSOR][i];
+        TStr sensorName = Schema->FileSchema[col_id].GetVal1();
+        if (IdVector[SensorIndex] == TStr::GetNullStr()) {
+            IdVector[SensorIndex] = sensorName; // only replace sensor in ID vec if not already there
+        }
+        if (!RawTimeData.IsKey(IdVector)) {
+            // add a vector for this key if it's not there already
+            TVec<TTRawData> new_time_data;
+            RawTimeData.AddDat(IdVector, new_time_data);
+        }
+        TVec<TTRawData> & stored_data_vec = RawTimeData.GetDat(IdVector);
+        for (int j=0; j< sensor_data.Len(); j++) {
+            // add data into vectors
+            TTime ts = running_times[j];
+            TStr value = sensor_data[j];
+            TTRawData new_tv_pair = TTRawData(ts, value);
+            stored_data_vec.Add(new_tv_pair);
+            CurrNumRecords++;
+        }
+        if (CurrNumRecords >= MaxRecordCapacity) {
+            std::cout << MaxRecordCapacity << std::endl;
+            FlushUnsortedData();
+            CurrNumRecords = 0;
+        }
+        sensor_data.Clr();
+    }
+    running_times.Clr();
+    running_id.Clr();
 }
 
 void TSTimeParser::AddDataValue(const TTIdVec & IDVector, TStr & value, TTime ts) {

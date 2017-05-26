@@ -1,6 +1,6 @@
-CC = /usr/local/bin/gcc-7
-# CC = g++
-CXXFLAGS += -std=c++11 -fopenmp -pg -Wall
+#CC = /usr/local/bin/gcc-7
+CC = g++
+CXXFLAGS += -std=c++11 -fopenmp -Wall
 LDFLAGS += -lrt
 
 SNAP = ../../../snap/snap-core

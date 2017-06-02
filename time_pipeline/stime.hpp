@@ -21,6 +21,10 @@ public:
     TVec<TPair<TTime, TVal> > TimeData; // sorted by time
 public:
 	TSTime(TTIdVec _KeyIds) : KeyIds(_KeyIds), TimeData() {}
+	TSTime(TFIn& FIn) {
+		Load(FIn);
+	}
+
 	void Save(TFOut& FOut) {
 		KeyIds.Save(FOut);
 		TimeData.Save(FOut);

@@ -12,6 +12,7 @@
 #include "stime.hpp"
 #include "stime_schema.hpp"
 #include "stime_parser.hpp"
+#include "stime_symdir.hpp"
 #include "stime_manager.hpp"
 #include "stime_helper.hpp"
 #include "stime_sorter.hpp"

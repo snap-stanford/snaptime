@@ -49,8 +49,8 @@ void TSParserManager::SortBucketedData(bool ClearData) {
     int hierarchySize = ModHierarchy.Len() +1 ;// including the top level directory
     TraverseBucketedData(OutputDirectory, hierarchySize, ClearData, dirPaths);
 
-    // delegate sorting tasks
-    #pragma omp parallel for
+    // TODO: make this actually work in parallel delegate sorting tasks
+    //#pragma omp parallel for
     for (int i=0; i<dirPaths.Len(); i++) {
         TSTimeSorter::SortBucketedDataDir(dirPaths[i], ClearData, &Schema);
     }

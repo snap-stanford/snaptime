@@ -60,6 +60,7 @@ bool TTSchema::GetNextSchemaLine(std::ifstream & infile, std::string & line) {
 		if (line == "" || line[0] == '#') {
 			continue; //skip line if empty or if commented out
 		} else {
+			std::cout << "debug line " << line << std::endl;
 			return true; // found line that isn't bogus
 		}
 	}
@@ -94,6 +95,7 @@ void TTSchema::ReadFileHierarchy(std::ifstream & infile) {
 	// option for delimiter
 	std::string delim_key("DELIM:");
 	if (TStr(line.c_str()).IsPrefix(delim_key.c_str())) {
+		std::cout << "has delimiter" << std::endl;
 		std::string delim = line.substr(delim_key.size());
 		AssertR(delim.length() == 1, "delimiter must be only one character");
 		FileDelimiter = delim[0];

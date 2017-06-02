@@ -29,7 +29,6 @@ void TSTimeParser::ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd) 
 	line_no++;
         TVec<TStr> row = TCSVParse::readCSVLine(line, Schema->FileDelimiter);
         if (line_no % 100000 == 0) std::cout << "lines read " << line_no << std::endl;
-        AssertR(Schema->FileSchema.Len() == row.Len(), "event file has incorrect number of columns");
 
         // Adjust ID Vector in dcmd
         for (int i=0; i<Schema->FileSchemaIndexList[ID].Len(); i++) {
@@ -45,7 +44,6 @@ void TSTimeParser::ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd) 
 		running_id = dcmd.RunningIDVec;
 		KeyIDs.Clr();
 		GetRawTimeListsForIDs(KeyIDs, running_id);
-		AssertR(KeyIDs.Len() == Schema->FileSchemaIndexList[SENSOR].Len(), "bad collection of raw data ptrs");
 	}
 
         // Adjust TIME in dcmd
@@ -61,8 +59,7 @@ void TSTimeParser::ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd) 
             TStr val = row[col_id];
 	    if (val == TStr("")) continue;
 	    TTRawData new_tv_pair = TTRawData(ts, val);
-	    TVec<TTRawData> & data_vec =  RawTimeData[KeyIDs[i]];
-            data_vec.Add(new_tv_pair);
+	    RawTimeData[KeyIDs[i]].Add(new_tv_pair);
 	    CurrNumRecords++;
         }
 

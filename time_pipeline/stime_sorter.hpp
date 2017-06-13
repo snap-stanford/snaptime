@@ -16,15 +16,16 @@ public:
 
 private:
 	template<class TVal>
-	static void WriteSortedData(TStr DirPath, TTIdVec& IDs, TTRawDataV& SortedData, TVal (*val_convert)(TStr),
+	static void WriteSortedData(TType Type, TStr DirPath, TTIdVec& IDs, TTRawDataV& SortedData, TVal (*val_convert)(TStr),
 		bool ClearData) {
 		// convert all strings into actual data types
-		TSTime<TVal> result(IDs);
+		TSTime result(Type, IDs);
 		for (int i=0; i < SortedData.Len(); i++) {
 			TTime ts = SortedData[i].GetVal1();
 			TVal val = val_convert(SortedData[i].GetVal2());
 			TPair<TTime, TVal> new_val(ts, val);
-			result.TimeData.Add(new_val);
+			TVec<TPair<TTime, TVal> > * data_ptr = (TVec<TPair<TTime, TVal> > *) result.TimeDataPtr;
+			data_ptr->Add(new_val);
 		}
 		TStr OutFile = DirPath + TStr("/") + TCSVParse::CreateIDVFileName(IDs) + TStr(".out");
 		if (ClearData) {

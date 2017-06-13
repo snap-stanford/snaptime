@@ -25,19 +25,19 @@ void TSTimeSorter::SortBucketedDataDir(TStr DirPath, bool ClearData, TTSchema* s
     BucketedData.SortCmp(comparator);
     switch (type) {
         case BOOLEAN:
-            TSTimeSorter::WriteSortedData<TBool>(DirPath, IDs, BucketedData,
+            TSTimeSorter::WriteSortedData<TBool>(type, DirPath, IDs, BucketedData,
                 [] (TStr s) {return TBool(s[0] == 'T' || s[0] == 't' || s[0] == '1');}, ClearData);
             break;
         case STRING:
-            TSTimeSorter::WriteSortedData<TStr>(DirPath, IDs, BucketedData,
+            TSTimeSorter::WriteSortedData<TStr>(type, DirPath, IDs, BucketedData,
                 [] (TStr s) { return s;}, ClearData);
             break;
         case INTEGER:
-            TSTimeSorter::WriteSortedData<TInt>(DirPath, IDs, BucketedData,
+            TSTimeSorter::WriteSortedData<TInt>(type, DirPath, IDs, BucketedData,
                 [] (TStr s) { return TInt(s.GetInt());}, ClearData);
             break;
         default:
-            TSTimeSorter::WriteSortedData<TFlt>(DirPath, IDs, BucketedData,
+            TSTimeSorter::WriteSortedData<TFlt>(type, DirPath, IDs, BucketedData,
                 [] (TStr s) { return TFlt(s.GetFlt());}, ClearData);
             break;
     }

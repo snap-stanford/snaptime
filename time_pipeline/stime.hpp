@@ -14,25 +14,69 @@ typedef TVec<TTRawData> TTRawDataV; // vector of raw data
  * The IDs, for now, are strings
  * The timestamps are for some granularity (so metadata includes range)
  */
-template <class TVal>
 class TSTime {
 public:
+	TType stime_type; // will be saved as an int
     TTIdVec KeyIds;
-    TVec<TPair<TTime, TVal> > TimeData; // sorted by time
+    void* TimeDataPtr; // pointer to data (must free). Data must be a vector of (TTime, stime_type)
 public:
-	TSTime(TTIdVec _KeyIds) : KeyIds(_KeyIds), TimeData() {}
-	TSTime(TFIn& FIn) {
-		Load(FIn);
+	// toy constructor if only manipulating metadata
+	TSTime() : KeyIds() {
+		stime_type = INTEGER;
+		TimeDataPtr = NULL;
 	}
 
-	void Save(TFOut& FOut) {
-		KeyIds.Save(FOut);
-		TimeData.Save(FOut);
+	TSTime(TType _type, TTIdVec _KeyIds) : stime_type(_type), KeyIds(_KeyIds) {
+		CreateTimeData();
 	}
-	void Load(TFIn& FIn) {
+
+	TSTime(TFIn& FIn) {
+		LoadMetaData(FIn);
+		CreateTimeData();
+		switch(stime_type) {
+			case BOOLEAN: ((TVec<TPair<TTime, TBool> > *) TimeDataPtr)->Load(FIn); break;
+			case STRING: ((TVec<TPair<TTime, TStr> > *) TimeDataPtr)->Load(FIn); break;
+			case INTEGER: ((TVec<TPair<TTime, TInt> > *) TimeDataPtr)->Load(FIn); break;
+			case FLOAT: ((TVec<TPair<TTime, TFlt> > *) TimeDataPtr)->Load(FIn); break;
+		}
+	}
+
+	~TSTime() {
+		if (TimeDataPtr != NULL) delete TimeDataPtr;
+	}
+
+	// don't load the actual data
+	void LoadMetaData(TFIn& FIn) {
+		int _type;
+		FIn.Load(_type);
+		stime_type = static_cast<TType>(_type);
 		KeyIds.Load(FIn);
-		TimeData.Load(FIn);
+	}	
+
+	void Save(TFOut& FOut) {
+		FOut.Save(static_cast<int>(stime_type));
+		KeyIds.Save(FOut);
+		if (TimeDataPtr != NULL) {
+			switch(stime_type) {
+				case BOOLEAN:((TVec<TPair<TTime, TBool> > *) TimeDataPtr)->Save(FOut); break;
+				case STRING: ((TVec<TPair<TTime, TStr> > *) TimeDataPtr)->Save(FOut); break;
+				case INTEGER: ((TVec<TPair<TTime, TInt> > *) TimeDataPtr)->Save(FOut); break;
+				case FLOAT: ((TVec<TPair<TTime, TFlt> > *) TimeDataPtr)->Save(FOut); break;
+			}
+		}
 	}
+
+private:
+	void CreateTimeData() {
+		switch(stime_type) {
+			case BOOLEAN: TimeDataPtr = new TVec<TPair<TTime, TBool> > (); break;
+			case STRING: TimeDataPtr = new TVec<TPair<TTime, TStr> > (); break;
+			case INTEGER: TimeDataPtr = new TVec<TPair<TTime, TInt> > (); break;
+			case FLOAT: TimeDataPtr = new TVec<TPair<TTime, TFlt> > (); break;
+		}
+		AssertR(stime_type != NULL, "allocation error");
+	}
+
 };
 
 /*

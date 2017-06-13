@@ -4,3 +4,4 @@
 #include "stime_schema.cpp"
 #include "stime_manager.cpp"
 #include "stime_sorter.cpp"
+#include "stime_symdir.cpp"

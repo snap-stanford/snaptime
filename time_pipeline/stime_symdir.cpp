@@ -77,6 +77,7 @@ void TSTimeSymDir::TraverseEventFiles(TStr& Dir) {
 }
 
 void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
+	std::cout<< "Processing " << EventFileName.CStr() << std::endl;
 	TFIn inputstream(EventFileName);
 	TSTime t;
 	t.LoadMetaData(inputstream);
@@ -84,8 +85,8 @@ void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
 	// find the dir names
 	for (int i=0; i<QuerySplit.Len(); i++) {
 		TStr & Query = QuerySplit[i];
-		AssertR(Schema->IDName_To_Index.IsKey(Query), "Query to split on SymDir not found");
-		TInt IDIndex = Schema->IDName_To_Index.GetDat(Query);
+		AssertR(Schema.IDName_To_Index.IsKey(Query), "Query to split on SymDir not found");
+		TInt IDIndex = Schema.IDName_To_Index.GetDat(Query);
 		SymDirs.Add(t.KeyIds[IDIndex]);
 	}
 	// for each directory level, create the dir if it doesn't exist

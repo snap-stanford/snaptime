@@ -12,14 +12,13 @@ public:
 	TStr InputDir;
 	TStr OutputDir;
 	TStrV QuerySplit;
-	TTSchema* Schema;
+	TTSchema Schema;
 	TBool FileSysCreated;
 public:
 	TSTimeSymDir(TStr _InputDir, TStr _OutputDir, TStrV _QuerySplit,
-		TTSchema* _Schema) : InputDir(_InputDir), OutputDir(_OutputDir), 
-		QuerySplit(_QuerySplit), FileSysCreated(false) {
-
-		Schema = _Schema;
+		TStr SchemaFile) : InputDir(_InputDir), OutputDir(_OutputDir), 
+		QuerySplit(_QuerySplit), FileSysCreated(false) {		
+		Schema.ReadSchemaFile(SchemaFile);
 		AssertR(TDir::Exists(InputDir), "Input directory must exist");
 		if (!TDir::Exists(OutputDir)) TDir::GenDir(OutputDir);
 	}

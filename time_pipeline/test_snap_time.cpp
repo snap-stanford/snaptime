@@ -1,54 +1,71 @@
 #include "SnapTime.hpp"
 
-
-int main( int argc, char* argv[] ){
-
-	if (argc != 5) {
-		std::cout << "wrong num args" << std::endl;
-		exit(0);
-	}
-	time_t t_start = time(0);
-	std::cout << "Start: " << (long long) t_start << std::endl;
-	TStr SchemaFile(argv[1]);
-	TStr InputDir(argv[2]);
-	TStr OutputDir(argv[3]);
-
-	TStr NumThreads(argv[4]);
-
+void generate_primary(TStr InputDir, TStr OutputDir, TStr SchemaFile, TInt NumThreads) {
 
 	TVec<int> ModHierarchy;
 	ModHierarchy.Add(29);
 	ModHierarchy.Add(13);
-
-	TSParserManager manager(OutputDir, SchemaFile, ModHierarchy, NumThreads.GetInt(), 10000000);
+	time_t t_start = time(0);
+	TSParserManager manager(OutputDir, SchemaFile, ModHierarchy, NumThreads, 10000000);
 	manager.ReadRawData(InputDir);
 	time_t t_raw = time(0);
 	std::cout << "Start: " << (long long) t_start << ". Raw: " << (long long) t_raw << std::endl;
-	
 	manager.SortBucketedData(true);
 	time_t t_sort = time(0);
-std::cout << "Start: " << (long long) t_start << ". Raw: " << (long long) t_raw << ". Sort " << (long long) t_sort << std::endl;
+	std::cout << "Start: " << (long long) t_start << ". Raw: " << (long long) t_raw << ". Sort " << (long long) t_sort << std::endl;
+}
 
-	// TSTimeParser parser(OutputDir, SchemaFile, ModHierarchy, 1000000);
-	// parser.ReadRawData(InputDir);
-	// time_t t_raw = time(0);
-	// parser.SortBucketedData(true);
-	// time_t t_pass = time(0);
+void query(TStr InputDir, TStr OutputDir, TStr SchemaFile) {
+	TStrV QuerySplit;
+	QuerySplit.Add("MachineID");
+	QuerySplit.Add("SENSOR");
+	TSTimeSymDir SymDirMaker(InputDir, OutputDir, QuerySplit, SchemaFile);
+	SymDirMaker.CreateSymbolicDirs();
+}
 
-	// std::cout << "Start: " << (long long) t_start << ". Schema: " << (long long) t_schema;
-	// std::cout << ". First Pass: " << (long long) t_raw << ". Finished: " << (long long) t_pass << std::endl;
+int main( int argc, char* argv[] ){
+	// 1st arg must be test number
+	//		0: generate primary dirs
+	//		1: query an already created directory
+	if (argc < 2) {
+		std::cout << "need to at least specify an action" << std::endl;
+	}
 
-	// // TStr dirname = TStr(argv[1]);
-	// std::string event_file(argv[2]);
-	// TVec<int> ModHierarchy;
-	// ModHierarchy.Add(29);
-	// ModHierarchy.Add(13);
-	// TSTimeParser parser(dirname, ModHierarchy, 100000);
+	TStr Action(argv[1]);
+	TInt action = Action.GetInt();
+	if (action == 0) {
+		// Generate Primary Dirs Args:
+		//		action: 0
+		//		SchemaFile
+		//		InputDir
+		//		OutputDir
+		//		NumThreads
+		if (argc != 6) {
+			std::cout << "wrong num args for generating primary dirs" << std::endl;
+			exit(0);
+		}
+		TStr SchemaFile(argv[2]);
+		TStr InputDir(argv[3]);
+		TStr OutputDir(argv[4]);
+		TStr NumThreads(argv[5]);
+		TInt num_threads = NumThreads.GetInt();
+		generate_primary(InputDir, OutputDir, SchemaFile, num_threads);
+	} else if (action == 1) {
+		// Query Test Args:
+		//		action : 0
+		// 		SchemaFile
+		//		InputDir
+		//		OutputDir
+		if (argc != 5) {
+			std::cout << "wrong num args for generating primary dirs" << std::endl;
+			exit(0);
+		}
+		TStr SchemaFile(argv[2]);
+		TStr InputDir(argv[3]);
+		TStr OutputDir(argv[4]);
+		query(InputDir, OutputDir, SchemaFile);
 
-	// TTimeFFile::GetAllDirs(dirname);
-	// parser.SortBucketedData(true);
-	// parser.ReadEventFile(event_file);
-	// parser.SortBucketedData(TStr("testdir/101676B3_4B304146"), INTEGER,true);
+	}
   return 0;
 }
 

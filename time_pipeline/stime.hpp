@@ -30,37 +30,27 @@ public:
 		CreateTimeData();
 	}
 
-	TSTime(TFIn& FIn) {
-		LoadMetaData(FIn);
-		CreateTimeData();
-		switch(stime_type) {
-			case BOOLEAN: ((TVec<TPair<TTime, TBool> > *) TimeDataPtr)->Load(FIn); break;
-			case STRING: ((TVec<TPair<TTime, TStr> > *) TimeDataPtr)->Load(FIn); break;
-			case INTEGER: ((TVec<TPair<TTime, TInt> > *) TimeDataPtr)->Load(FIn); break;
-			case FLOAT: ((TVec<TPair<TTime, TFlt> > *) TimeDataPtr)->Load(FIn); break;
-		}
+	TSTime(TSIn& FIn) {
+		Load(FIn);
 	}
 
 	~TSTime() {
+		FreeTimeData();
+	}
+
+	void FreeTimeData() {
 		if (TimeDataPtr != NULL) {
 			switch(stime_type) {
 				case BOOLEAN: delete ((TVec<TPair<TTime, TBool> > *) TimeDataPtr); break;
-                                case STRING: delete ((TVec<TPair<TTime, TStr> > *) TimeDataPtr); break;
-                                case INTEGER: delete ((TVec<TPair<TTime, TInt> > *) TimeDataPtr); break;
-                                case FLOAT: delete ((TVec<TPair<TTime, TFlt> > *) TimeDataPtr); break;
+                case STRING: delete ((TVec<TPair<TTime, TStr> > *) TimeDataPtr); break;
+                case INTEGER: delete ((TVec<TPair<TTime, TInt> > *) TimeDataPtr); break;
+                case FLOAT: delete ((TVec<TPair<TTime, TFlt> > *) TimeDataPtr); break;
 			}
 		}
+		TimeDataPtr = NULL;
 	}
 
-	// don't load the actual data
-	void LoadMetaData(TFIn& FIn) {
-		int _type;
-		FIn.Load(_type);
-		stime_type = static_cast<TType>(_type);
-		KeyIds.Load(FIn);
-	}	
-
-	void Save(TFOut& FOut) {
+	void Save(TSOut& FOut) {
 		FOut.Save(static_cast<int>(stime_type));
 		KeyIds.Save(FOut);
 		if (TimeDataPtr != NULL) {
@@ -70,6 +60,26 @@ public:
 				case INTEGER: ((TVec<TPair<TTime, TInt> > *) TimeDataPtr)->Save(FOut); break;
 				case FLOAT: ((TVec<TPair<TTime, TFlt> > *) TimeDataPtr)->Save(FOut); break;
 			}
+		}
+	}
+
+	// don't load the actual data
+	void LoadMetaData(TSIn& FIn) {
+		int _type;
+		FIn.Load(_type);
+		stime_type = static_cast<TType>(_type);
+		KeyIds.Load(FIn);
+	}	
+
+	void Load(TSIn& FIn) {
+		LoadMetaData(FIn);
+		FreeTimeData();
+		CreateTimeData();
+		switch(stime_type) {
+			case BOOLEAN: ((TVec<TPair<TTime, TBool> > *) TimeDataPtr)->Load(FIn); break;
+			case STRING: ((TVec<TPair<TTime, TStr> > *) TimeDataPtr)->Load(FIn); break;
+			case INTEGER: ((TVec<TPair<TTime, TInt> > *) TimeDataPtr)->Load(FIn); break;
+			case FLOAT: ((TVec<TPair<TTime, TFlt> > *) TimeDataPtr)->Load(FIn); break;
 		}
 	}
 

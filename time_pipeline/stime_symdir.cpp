@@ -20,10 +20,25 @@ void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TStr OutputFile) {
 	// retrieve the data and put into an executable
 	TQueryResult r;
 	UnravelQuery(SymDirQueries, 0, OutputDir, QueryMap, r);
+	TFOut outstream(OutputFile);
+	r.Save(outstream);
 }
 
 void TSTimeSymDir::GatherQueryResult(TStr FileName, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r) {
-	std::cout << FileName.CStr() << std::endl;
+	TFIn inputstream(FileName);
+	TSTime t(inputstream);
+
+	THash<TStr, FileQuery>::TIter it;
+    for (it = ExtraQueries.BegI(); it != ExtraQueries.EndI(); it++) {
+        TStr QueryName = it.GetKey();
+        TStr QueryVal = it.GetDat().QueryVal;
+        AssertR(Schema.IDName_To_Index.IsKey(QueryName), "Invalid query");
+        TInt IdIndex = Schema.IDName_To_Index.GetDat(QueryName);
+        if (t.KeyIds[IdIndex] != QueryVal) return; // does not match query
+    }
+	r.Add(t);
+	t.TimeDataPtr = NULL; // prevents deallocating the pointer we just added into the array.
+	//TODO, above is a hack. fix this
 }
 
 void TSTimeSymDir::UnravelQuery(FileQuery* SymDirQueries, int SymDirQueryIndex,

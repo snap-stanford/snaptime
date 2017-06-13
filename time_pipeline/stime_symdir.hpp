@@ -1,7 +1,13 @@
 #ifndef STIME_SYMDIR_H
 #define STIME_SYMDIR_H
 
-typedef TVec<TUnsortedTime> TQueryResult;
+typedef TVec<TSTime> TQueryResult;
+
+struct FileQuery {
+	TStr QueryName; //name of ID
+	TStr QueryVal; //empty string if any value
+	TBool IncludeAsVal; //include identifier
+};
 
 /*
  * Class: TSParserManager
@@ -17,19 +23,16 @@ public:
 public:
 	TSTimeSymDir(TStr _InputDir, TStr _OutputDir, TStrV _QuerySplit,
 		TStr SchemaFile) : InputDir(_InputDir), OutputDir(_OutputDir), 
-		QuerySplit(_QuerySplit), FileSysCreated(false) {		
+		QuerySplit(_QuerySplit), FileSysCreated(false) {	
+
 		Schema.ReadSchemaFile(SchemaFile);
 		AssertR(TDir::Exists(InputDir), "Input directory must exist");
 		if (!TDir::Exists(OutputDir)) TDir::GenDir(OutputDir);
+		
 	}
 
 	void CreateSymbolicDirs();
 public:
-	struct FileQuery {
-		TStr QueryName; //name of ID
-		TStr QueryVal; //empty string if any value
-		TBool IncludeAsVal; //include identifier
-	};
 	void QueryFileSys(TVec<FileQuery> Query, TStr OutputFile);
 private:
 	void TraverseEventFiles(TStr& Dir);

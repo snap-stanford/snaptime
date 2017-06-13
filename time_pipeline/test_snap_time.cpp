@@ -15,25 +15,34 @@ void generate_primary(TStr InputDir, TStr OutputDir, TStr SchemaFile, TInt NumTh
 	std::cout << "Start: " << (long long) t_start << ". Raw: " << (long long) t_raw << ". Sort " << (long long) t_sort << std::endl;
 }
 
-void query(TStr InputDir, TStr OutputDir, TStr SchemaFile) {
+void create_sym_dirs(TStr InputDir, TStr OutputDir, TStr SchemaFile) {
 	// perform symdir creation
 	TStrV QuerySplit;
 	QuerySplit.Add("MachineID");
 	QuerySplit.Add("SENSOR");
 	TSTimeSymDir SymDirMaker(InputDir, OutputDir, QuerySplit, SchemaFile);
 	SymDirMaker.CreateSymbolicDirs();
+}
 
+void query(TStr InputDir, TStr OutputDir, TStr SchemaFile, TStr OutputFile) {
 	// perform query
-	TVec<TSTimeSymDir::FileQuery> Query;
-	TSTimeSymDir::FileQuery q1 = {"MachineID", "2029717966592933890.csv.cut", false};
+	TStrV QuerySplit;
+	QuerySplit.Add("MachineID");
+	QuerySplit.Add("SENSOR");
+	TSTimeSymDir SymDirMaker(InputDir, OutputDir, QuerySplit, SchemaFile);
+
+	TVec<FileQuery> Query;
+	FileQuery q1 = {"MachineID", "2029717966592933890.csv.cut", false};
 	Query.Add(q1);
-	SymDirMaker.QueryFileSys(Query, "output.bin");
+
+	SymDirMaker.QueryFileSys(Query, OutputFile);
 }
 
 int main( int argc, char* argv[] ){
 	// 1st arg must be test number
 	//		0: generate primary dirs
-	//		1: query an already created directory
+	//		1: create sym links on top of primary dirs
+	//		2: query a symbolic dir
 	if (argc < 2) {
 		std::cout << "need to at least specify an action" << std::endl;
 	}
@@ -59,7 +68,7 @@ int main( int argc, char* argv[] ){
 		generate_primary(InputDir, OutputDir, SchemaFile, num_threads);
 	} else if (action == 1) {
 		// Query Test Args:
-		//		action : 0
+		//		action : 1
 		// 		SchemaFile
 		//		InputDir
 		//		OutputDir
@@ -70,8 +79,23 @@ int main( int argc, char* argv[] ){
 		TStr SchemaFile(argv[2]);
 		TStr InputDir(argv[3]);
 		TStr OutputDir(argv[4]);
-		query(InputDir, OutputDir, SchemaFile);
-
+		create_sym_dirs(InputDir, OutputDir, SchemaFile);
+	} else if (action == 2) {
+		// Query Test Args:
+		//		action : 2
+		// 		SchemaFile
+		//		InputDir
+		//		OutputDir
+		//		OutputFile
+		if (argc != 6) {
+			std::cout << "wrong num args for generating primary dirs" << std::endl;
+			exit(0);
+		}
+		TStr SchemaFile(argv[2]);
+		TStr InputDir(argv[3]);
+		TStr OutputDir(argv[4]);
+		TStr OutputFile(argv[5]);
+		query(InputDir, OutputDir, SchemaFile, OutputFile);
 	}
   return 0;
 }

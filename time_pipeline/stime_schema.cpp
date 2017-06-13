@@ -56,11 +56,9 @@ void TTSchema::PrintSchema() const {
 bool TTSchema::GetNextSchemaLine(std::ifstream & infile, std::string & line) {
 	while(std::getline(infile, line)) {
 		line = TCSVParse::trim(line);
-		std::cout << line << std::endl;
 		if (line == "" || line[0] == '#') {
 			continue; //skip line if empty or if commented out
 		} else {
-			std::cout << "debug line " << line << std::endl;
 			return true; // found line that isn't bogus
 		}
 	}

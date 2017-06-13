@@ -4,6 +4,8 @@
 class TTimeFFile {
 public:
   static void GetAllFiles(TStr& Path, TStrV& FnV, bool OnlyDirs = false);
+  static TStr GetLocalFileName(TStr & DirName);
+  static TStr EscapeFileName(TStr & FileName);
 };
 
 class TCSVParse {

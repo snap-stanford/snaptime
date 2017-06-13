@@ -27,7 +27,9 @@ void TSParserManager::ExploreDataDirs(TStr & DirName, TDirCrawlMetaData dcmd, in
     std::cout << "Explore Dirs "<< DirName.CStr() << std::endl;
     //adjust the metadata based on dir filename
     TStr DirBehavior = Schema.Dirs[DirIndex];
-    TDirCrawlMetaData::AdjustDcmd(DirName, DirBehavior, dcmd, &Schema);
+
+    TStr LocalFileName = TTimeFFile::GetLocalFileName(DirName);
+    TDirCrawlMetaData::AdjustDcmd(LocalFileName, DirBehavior, dcmd, &Schema);
 
     //base case: at the end of the dirs, so this is an event file. Add it to the
     // vector to be read later

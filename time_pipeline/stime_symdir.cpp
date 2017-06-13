@@ -17,7 +17,6 @@ void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TStr OutputFile) {
 			SymDirQueries[i].QueryVal = TStr("");
 		}
 	}	
-
 	// retrieve the data and put into an executable
 	TQueryResult r;
 	UnravelQuery(SymDirQueries, 0, OutputDir, QueryMap, r);
@@ -30,6 +29,8 @@ void TSTimeSymDir::GatherQueryResult(TStr FileName, THash<TStr, FileQuery> & Ext
 void TSTimeSymDir::UnravelQuery(FileQuery* SymDirQueries, int SymDirQueryIndex,
 	TStr& Dir, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r) {
 
+	std::cout << "unravelling " << Dir.CStr() << std::endl;
+
 	if (SymDirQueryIndex == QuerySplit.Len()) {
 		// base case: done traversing the symbolic directory, so we are in a directory
 		// of pure event files. gather these event files into r
@@ -38,7 +39,7 @@ void TSTimeSymDir::UnravelQuery(FileQuery* SymDirQueries, int SymDirQueryIndex,
 	}
 	if (SymDirQueries[SymDirQueryIndex].QueryVal != TStr("")) {
 		// if this directory has a query value, go to that folder
-		TStr path = Dir + TStr("/") + SymDirQueries[SymDirQueryIndex].QueryVal;
+		TStr path = Dir + TStr("/") + TTimeFFile::EscapeFileName(SymDirQueries[SymDirQueryIndex].QueryVal);
 		AssertR(TDir::Exists(path), "Query does not exist in symbolic dir");
 		UnravelQuery(SymDirQueries, SymDirQueryIndex+1, path, ExtraQueries, r);
 	} else {
@@ -82,14 +83,21 @@ void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
 	TSTime t;
 	t.LoadMetaData(inputstream);
 	TStrV SymDirs;
+	std::cout << QuerySplit.Len() << std::endl;
 	// find the dir names
 	for (int i=0; i<QuerySplit.Len(); i++) {
 		TStr & Query = QuerySplit[i];
 		AssertR(Schema.IDName_To_Index.IsKey(Query), "Query to split on SymDir not found");
 		TInt IDIndex = Schema.IDName_To_Index.GetDat(Query);
-		SymDirs.Add(t.KeyIds[IDIndex]);
+		SymDirs.Add(TTimeFFile::EscapeFileName(t.KeyIds[IDIndex]));
 	}
+	std::cout << SymDirs.Len() << std::endl;
 	// for each directory level, create the dir if it doesn't exist
+	for (int i=0; i<SymDirs.Len(); i++) {
+		std::cout<< SymDirs[i].CStr() << std::endl;
+		std::cout << "----" << std::endl;
+	}
+	//AssertR(false, "added assert");
 	TStr path = OutputDir;
 	for (int i=0; i<SymDirs.Len(); i++) {
 		path = path + TStr("/") + SymDirs[i];

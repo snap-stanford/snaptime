@@ -1,5 +1,24 @@
 #include "stime_helper.hpp"
 
+
+TStr TTimeFFile::GetLocalFileName(TStr & DirName) {
+    std::string dir_str = std::string(DirName.CStr());
+    if (dir_str[dir_str.length() - 1] == '/') {
+        dir_str.erase(dir_str.length() - 1);
+    }
+    dir_str = dir_str.substr( dir_str.find_last_of("/") + 1 );
+    return TStr(dir_str.c_str());
+}
+
+TStr TTimeFFile::EscapeFileName(TStr & FileName) {
+	// remove forwardslashes from filename
+	std::string fname = std::string(FileName.CStr());
+	for (int i=fname.length() -1; i>=0; i--) {
+		if (fname[i] == '/') fname.erase(i);
+	}
+	return TStr(fname.c_str());
+}
+
 //includes directories. returns the full path
 void TTimeFFile::GetAllFiles(TStr& Path, TStrV& FnV, bool OnlyDirs){
   DIR* dir = opendir(Path.CStr());

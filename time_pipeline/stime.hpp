@@ -42,7 +42,14 @@ public:
 	}
 
 	~TSTime() {
-		if (TimeDataPtr != NULL) delete TimeDataPtr;
+		if (TimeDataPtr != NULL) {
+			switch(stime_type) {
+				case BOOLEAN: delete ((TVec<TPair<TTime, TBool> > *) TimeDataPtr); break;
+                                case STRING: delete ((TVec<TPair<TTime, TStr> > *) TimeDataPtr); break;
+                                case INTEGER: delete ((TVec<TPair<TTime, TInt> > *) TimeDataPtr); break;
+                                case FLOAT: delete ((TVec<TPair<TTime, TFlt> > *) TimeDataPtr); break;
+			}
+		}
 	}
 
 	// don't load the actual data
@@ -74,7 +81,7 @@ private:
 			case INTEGER: TimeDataPtr = new TVec<TPair<TTime, TInt> > (); break;
 			case FLOAT: TimeDataPtr = new TVec<TPair<TTime, TFlt> > (); break;
 		}
-		AssertR(stime_type != NULL, "allocation error");
+		AssertR(TimeDataPtr != NULL, "allocation error");
 	}
 
 };

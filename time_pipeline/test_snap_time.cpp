@@ -16,11 +16,18 @@ void generate_primary(TStr InputDir, TStr OutputDir, TStr SchemaFile, TInt NumTh
 }
 
 void query(TStr InputDir, TStr OutputDir, TStr SchemaFile) {
+	// perform symdir creation
 	TStrV QuerySplit;
 	QuerySplit.Add("MachineID");
 	QuerySplit.Add("SENSOR");
 	TSTimeSymDir SymDirMaker(InputDir, OutputDir, QuerySplit, SchemaFile);
 	SymDirMaker.CreateSymbolicDirs();
+
+	// perform query
+	TVec<TSTimeSymDir::FileQuery> Query;
+	TSTimeSymDir::FileQuery q1 = {"MachineID", "2029717966592933890.csv.cut", false};
+	Query.Add(q1);
+	SymDirMaker.QueryFileSys(Query, "output.bin");
 }
 
 int main( int argc, char* argv[] ){

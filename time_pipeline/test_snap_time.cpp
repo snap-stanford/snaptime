@@ -6,7 +6,8 @@ void generate_primary(TStr InputDir, TStr OutputDir, TStr SchemaFile, TInt NumTh
 	ModHierarchy.Add(29);
 	ModHierarchy.Add(13);
 	time_t t_start = time(0);
-	TSParserManager manager(OutputDir, SchemaFile, ModHierarchy, NumThreads, 10000000);
+	std::cout<< NumThreads << std::endl;
+	TSParserManager manager(OutputDir, SchemaFile, ModHierarchy, NumThreads, 1000000);
 	manager.ReadRawData(InputDir);
 	time_t t_raw = time(0);
 	std::cout << "Start: " << (long long) t_start << ". Raw: " << (long long) t_raw << std::endl;

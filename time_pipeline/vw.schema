@@ -4,8 +4,8 @@ NULL, SENSOR
 END FileHierarchy
 
 START Schema
-DateTime, TIME
 DriverID, ID
+DateTime, TIME
 Value, SENSOR
 END Schema
 

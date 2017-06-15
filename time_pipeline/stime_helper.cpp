@@ -48,14 +48,18 @@ TVec<TStr> TCSVParse::readCSVLine(std::string line, char delim, bool TrimWs) {
     return vec_line;
 }
 
-std::string TCSVParse::trim(std::string const& str)
+std::string TCSVParse::trim(std::string str)
 {
     if(str.empty())
         return str;
-    std::size_t firstScan = str.find_first_not_of(' ');
-    std::size_t first = (firstScan == std::string::npos) ? str.length() : firstScan;
-    std::size_t last = str.find_last_not_of(' ');
-    return str.substr(first, last-first+1);
+    char white_spaces[] = {' ', '\n', '\r'};
+    for (int i=0; i<3; i++) {
+      std::size_t firstScan = str.find_first_not_of(white_spaces[i]);
+      std::size_t first = (firstScan == std::string::npos) ? str.length() : firstScan;
+      std::size_t last = str.find_last_not_of(white_spaces[i]);
+      str = str.substr(first, last-first+1);
+    }
+    return str;
 }
 
 //fname is based on primary and secondary hash of ids

@@ -1,6 +1,6 @@
 START FileHierarchy
 DELIM:	
-NULL, MachineID
+NULL, NULL, MachineID
 END FileHierarchy
 
 START Schema

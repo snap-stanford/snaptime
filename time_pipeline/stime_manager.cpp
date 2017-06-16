@@ -1,15 +1,25 @@
 void TSParserManager::ReadRawData(TStr DirName) {
     EventFileQueue.Clr();
     CollectRawData(DirName);
-    // parallelize this
+    ctpl::thread_pool p(NumThreads);
+    for (int i=0; i<EventFileQueue.Len(); i++) {
+       TStr fn = EventFileQueue[i].GetVal1();
+	TDirCrawlMetaData dcmd = EventFileQueue[i].GetVal2();
+	std::cout << "pushing" << std::endl;
+//	auto parser_method = [] (int id) { std::cout << "hello from " << id << std::endl;};
+	auto parser_method = [this, fn, dcmd] (int id) { this->parsers[id].ReadEventDataFile(fn, dcmd);};
+	p.push(parser_method);
+	//p.push([] (int id) {parsers[thread_num].ReadEventDataFile(fn, dcmd)});
+    }
+    p.stop(true);
+    /* // parallelize this
     #pragma omp parallel for
     for (int i=0; i<EventFileQueue.Len(); i++) {
         int thread_num = omp_get_thread_num();
-        /* read each event file */
         TStr fn = EventFileQueue[i].GetVal1();
         TDirCrawlMetaData dcmd = EventFileQueue[i].GetVal2();
         parsers[thread_num].ReadEventDataFile(fn, dcmd);
-    }
+    } */
     // perform last flushes
     for (int i=0; i<NumThreads; i++) {
         parsers[i].FlushUnsortedData();

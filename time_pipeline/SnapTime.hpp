@@ -7,6 +7,7 @@
 #include <ctime>
 #include <sstream> 
 #include <omp.h>
+#include <vector>
 
 #include "Snap.h"
 #include "stime.hpp"

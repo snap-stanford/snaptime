@@ -1,3 +1,52 @@
+/* for now these all get converted to floats. this should change eventually */
+void TSTimeSymDir::InflateData(TQueryResult & r, TTime initialTimestamp, int duration, int granularity,
+	std::vector<std::vector<double> > result) {
+	int indices[r.Len()];
+
+	int size = duration/granularity;
+	for (int i=0; i< r.Len(); i++) {
+		std::vector<double> empty_row (size);
+		result.push_back(empty_row);
+		indices[0] = 0;
+	}
+	for (int i=0; i < size; i++) { // for each timestamp
+		TTime ts = initialTimestamp + i*duration;
+		for (int j=0; j<r.Len(); j++) { // for each result
+ 			TSTime & data = r[j];
+ 			int new_index;
+ 			switch(data.stime_type) {
+ 				case BOOLEAN: new_index = TSTimeSymDir::AdvanceIndex <TBool> (data, ts, indices[j]); break;
+		        case STRING: AssertR(false, "cannot yet inflate strings"); return;
+		        case INTEGER: new_index = TSTimeSymDir::AdvanceIndex <TInt> (data, ts, indices[j]); break;
+		        case FLOAT: new_index = TSTimeSymDir::AdvanceIndex <TFlt> (data, ts, indices[j]); break;
+		    }
+		        	
+ 			indices[j] = new_index; // update running index
+ 			result[j][i] = TSTimeSymDir::GetValFromResult(data, new_index);
+		}
+	}
+}
+
+double TSTimeSymDir::GetValFromResult(TSTime & data, int index) {
+	double result = 0;
+	switch(data.stime_type) {
+		case BOOLEAN: 
+			result = (double) ((TVec<TPair<TTime, TBool> > *) data.TimeDataPtr)->GetVal(index).GetVal2();
+			break;
+        case STRING: 
+        	AssertR(false, "cannot yet inflate strings");
+        	result = -1;
+        	break;
+        case INTEGER:
+			result =  double(((TVec<TPair<TTime, TInt> > *) data.TimeDataPtr)->GetVal(index).GetVal2());
+			break;
+        case FLOAT:
+			result = ((TVec<TPair<TTime, TFlt> > *) data.TimeDataPtr)->GetVal(index).GetVal2();
+			break;
+	}
+	return result;
+}
+
 void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TStr OutputFile) {
 	// First find places where we can index by the symbolic filesystem
 	THash<TStr, FileQuery> QueryMap;

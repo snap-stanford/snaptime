@@ -19,14 +19,14 @@ public:
 	TVec<int> ModHierarchy;
 	TUInt MaxParserCapacity;
 
-	omp_lock_t filesys_lock;
+	std::mutex filesys_lock;
 public:
 	TSParserManager(TStr _OutputDir, TStr SchemaFile, TVec<int> _MHierarchy,
 		TInt _NumThreads = 1, TUInt _MaxParserCapacity = TUInt::Mx) : NumThreads(_NumThreads), 
 		Schema(), OutputDirectory(_OutputDir), ModHierarchy(_MHierarchy),
 		MaxParserCapacity(_MaxParserCapacity), filesys_lock() {
 
-		omp_set_num_threads(NumThreads);
+		//omp_set_num_threads(NumThreads);
 
 		// create the directory if it does not already exist
 		if (!TDir::Exists(OutputDirectory)) TDir::GenDir(OutputDirectory);
@@ -35,7 +35,7 @@ public:
 		Schema.ReadSchemaFile(SchemaFile);
 
 		// create filesys lock
-		omp_init_lock(&filesys_lock);
+		//omp_init_lock(&filesys_lock);
 		//create parsers
 		for (int i=0; i<NumThreads; i++) {
 			parsers.Add(TSTimeParser(_OutputDir, &Schema, _MHierarchy, &filesys_lock, MaxParserCapacity));

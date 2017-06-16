@@ -28,7 +28,7 @@ void TSTimeParser::ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd) 
     while(std::getline(infile, line)) {
 	line_no++;
         TVec<TStr> row = TCSVParse::readCSVLine(line, Schema->FileDelimiter);
-        if (line_no % 100000 == 0) std::cout << "lines read " << line_no << " by " << omp_get_thread_num() << " of " << omp_get_num_threads() << std::endl;
+        if (CurrNumRecords % 10000 == 0) std::cout << "lines read " << CurrNumRecords << " by " << omp_get_thread_num() << " of " << omp_get_num_threads() << " in " << FileName.CStr() << std::endl;
 
         // Adjust ID Vector in dcmd
         for (int i=0; i<Schema->FileSchemaIndexList[ID].Len(); i++) {

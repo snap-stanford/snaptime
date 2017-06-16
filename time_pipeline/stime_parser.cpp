@@ -13,7 +13,7 @@ void TDirCrawlMetaData::AdjustDcmd(const TStr & Name, const TStr & Behavior, TDi
 
 // read data file as according to schema
 // dcmd passed in was a copy up above, so ok to modify
-void TSTimeParser::ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd) {
+void TSTimeParser::ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd) {
     std::ifstream infile(FileName.CStr());
     AssertR(infile.is_open(), "could not open eventfile");
     std::cout << "reading file " << FileName.CStr() << std::endl;
@@ -28,7 +28,7 @@ void TSTimeParser::ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd) 
     while(std::getline(infile, line)) {
 	line_no++;
         TVec<TStr> row = TCSVParse::readCSVLine(line, Schema->FileDelimiter);
-        if (line_no % 100000 == 0) std::cout << "lines read " << line_no << " by " << omp_get_thread_num() << " of " << omp_get_num_threads() << std::endl;
+        if (CurrNumRecords % 10000 == 0) std::cout << "lines read " << CurrNumRecords << " by " << " in " << FileName.CStr() << std::endl;
 
         // Adjust ID Vector in dcmd
         for (int i=0; i<Schema->FileSchemaIndexList[ID].Len(); i++) {
@@ -152,8 +152,9 @@ void TSTimeParser::GetPrimDirNames(const TTIdVec & IdVec, TStrV& result) {
 
 void TSTimeParser::FlushUnsortedData() {
     std::cout<< "waiting to flush data"<<std::endl;
+    mtx->lock();
     // lock filesystem (no concurrent access)
-    omp_set_lock(file_sys_lock);
+    //omp_set_lock(file_sys_lock);
     std::cout<< "Flushing data"<<std::endl;
     THash<TTIdVec, TVec<TTRawData> >::TIter it;
     time_t t = std::time(0);
@@ -175,7 +176,8 @@ void TSTimeParser::FlushUnsortedData() {
         time_record.Save(outstream);
     }
     std::cout << "about to unlock" << std::endl;
-    omp_unset_lock(file_sys_lock);
+    //omp_unset_lock(file_sys_lock);
+    mtx->unlock();
     RawTimeData.Clr();
     std::cout<< "done flushing" << std::endl;
 }

@@ -38,8 +38,8 @@ private:
 	TUInt CurrNumRecords;
 	TUInt MaxRecordCapacity; // records to read before flushing files
 	TTSchema* Schema; // pointer to schema
-
-	omp_lock_t* file_sys_lock; // pointer to the file system lock
+	std::mutex* mtx;
+	//omp_lock_t* file_sys_lock; // pointer to the file system lock
 public:
 
 	TSTimeParser() {
@@ -48,9 +48,9 @@ public:
 	}
 
 	TSTimeParser(TStr OutputDir, TTSchema* _Schema, TVec<int> _ModHierarchy,
-		omp_lock_t* lock_p, TUInt MaxCapacity) {
+		std::mutex* _mtx, TUInt MaxCapacity) {
 
-		file_sys_lock = lock_p;
+		mtx = _mtx;
 		Schema = _Schema;
 		ModHierarchy = _ModHierarchy;
 		MaxRecordCapacity = MaxCapacity;
@@ -63,7 +63,7 @@ public:
 	void FlushUnsortedData();
 	// crawl through OutputDirectory given a schema
 	// void ReadRawData(TStr DirName);
-	void ReadEventDataFile(TStr & FileName, TDirCrawlMetaData & dcmd);
+	void ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd);
 
 private:
 

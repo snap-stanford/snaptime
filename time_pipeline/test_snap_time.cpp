@@ -7,10 +7,10 @@ void generate_primary(TStr InputDir, TStr OutputDir, TStr SchemaFile, TInt NumTh
 	ModHierarchy.Add(13);
 	time_t t_start = time(0);
 	std::cout<< NumThreads << std::endl;
-	TSParserManager manager(OutputDir, SchemaFile, ModHierarchy, NumThreads, 200000);
-	manager.ReadRawData(InputDir);
+	TSParserManager manager(OutputDir, SchemaFile, ModHierarchy, NumThreads, 500000);
+	//manager.ReadRawData(InputDir);
 	time_t t_raw = time(0);
-	std::cout << "Start: " << (long long) t_start << ". Raw: " << (long long) t_raw << std::endl;
+	//std::cout << "Start: " << (long long) t_start << ". Raw: " << (long long) t_raw << std::endl;
 	manager.SortBucketedData(true);
 	time_t t_sort = time(0);
 	std::cout << "Start: " << (long long) t_start << ". Raw: " << (long long) t_raw << ". Sort " << (long long) t_sort << std::endl;

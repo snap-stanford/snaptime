@@ -22,8 +22,9 @@ private:
 		TSTime result(Type, IDs);
 		for (int i=0; i < SortedData.Len(); i++) {
 			TTime ts = SortedData[i].GetVal1();
-			TVal val = val_convert(SortedData[i].GetVal2());
-			TPair<TTime, TVal> new_val(ts, val);
+			TPair<TTime, TVal> new_val;
+			new_val.Val1 = ts;
+			new_val.Val2 = val_convert(SortedData[i].GetVal2());
 			TVec<TPair<TTime, TVal> > * data_ptr = (TVec<TPair<TTime, TVal> > *) result.TimeDataPtr;
 			data_ptr->Add(new_val);
 		}

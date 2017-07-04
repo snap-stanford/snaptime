@@ -231,6 +231,7 @@ void TTSchema::ReadSchemaFile(TStr filename) {
 		Dirs.Add("NULL"); // add default file hierarchy: just bare files
 	}
 	divideFileSchemaByType();
+	std::cout<<"ending schema" << std::endl;
 }
 
 void TTSchema::divideFileSchemaByType() {

@@ -5,6 +5,7 @@ TTime TTSchema::ConvertTime(TStr timeVal) const {
 	}
 	
 	struct tm ts;
+	memset(&ts, 0,  sizeof(ts));
 	strptime(timeVal.CStr(), TimeFormatter.CStr(), &ts);
 	time_t t = mktime(&ts);
 	return (TTime) t;

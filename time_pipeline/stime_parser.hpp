@@ -39,7 +39,6 @@ private:
 	TUInt MaxRecordCapacity; // records to read before flushing files
 	TTSchema* Schema; // pointer to schema
 	std::mutex* mtx;
-	//omp_lock_t* file_sys_lock; // pointer to the file system lock
 public:
 
 	TSTimeParser() {

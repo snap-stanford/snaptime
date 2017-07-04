@@ -6,7 +6,7 @@
 #include <fstream>
 #include <ctime>
 #include <sstream> 
-#include <omp.h>
+#include <vector>
 #include <mutex>
 #include "ctpl_stl.h"
 #include "Snap.h"

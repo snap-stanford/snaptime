@@ -26,8 +26,6 @@ public:
 		Schema(), OutputDirectory(_OutputDir), ModHierarchy(_MHierarchy),
 		MaxParserCapacity(_MaxParserCapacity), filesys_lock() {
 
-		//omp_set_num_threads(NumThreads);
-
 		// create the directory if it does not already exist
 		if (!TDir::Exists(OutputDirectory)) TDir::GenDir(OutputDirectory);
 

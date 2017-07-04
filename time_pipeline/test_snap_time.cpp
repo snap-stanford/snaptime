@@ -33,7 +33,7 @@ void query(TStr InputDir, TStr OutputDir, TStr SchemaFile, TStr OutputFile) {
 	TSTimeSymDir SymDirMaker(InputDir, OutputDir, QuerySplit, SchemaFile);
 
 	TVec<FileQuery> Query;
-	FileQuery q1 = {"MachineID", "2029717966592933890.csv.cut", false};
+	FileQuery q1 = {"MachineID", "2029717966592933890.csv.cut"};
 	Query.Add(q1);
 
 	SymDirMaker.QueryFileSys(Query, OutputFile);

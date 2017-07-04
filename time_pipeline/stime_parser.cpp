@@ -154,7 +154,6 @@ void TSTimeParser::FlushUnsortedData() {
     std::cout<< "waiting to flush data"<<std::endl;
     mtx->lock();
     // lock filesystem (no concurrent access)
-    //omp_set_lock(file_sys_lock);
     std::cout<< "Flushing data"<<std::endl;
     THash<TTIdVec, TVec<TTRawData> >::TIter it;
     time_t t = std::time(0);
@@ -176,7 +175,6 @@ void TSTimeParser::FlushUnsortedData() {
         time_record.Save(outstream);
     }
     std::cout << "about to unlock" << std::endl;
-    //omp_unset_lock(file_sys_lock);
     mtx->unlock();
     RawTimeData.Clr();
     std::cout<< "done flushing" << std::endl;

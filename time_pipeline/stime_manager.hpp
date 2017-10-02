@@ -9,39 +9,41 @@ typedef TPair<TStr, TDirCrawlMetaData> TStrDCMD; /* represents info for one data
  */
 class TSParserManager {
 public:
-	/* collecting raw data */
-	TVec<TStrDCMD> EventFileQueue;
-
+	// EventFileQueue is a queue with information for bootstrapping a parser for each data file.
+	// The queue is a vector of {path, dir crawl meta data}
+	TVec<TPair<TStr, TDirCrawlMetaData> > EventFileQueue;
+	// parsers managed by this stime manager
 	TVec<TSTimeParser> parsers;
+	// the number of threads used in the parser threadpool
 	TInt NumThreads;
+	// The schema for parsing the raw directory data
 	TTSchema Schema;
+	// The output directory to place the primary parsed file hierarchy
 	TStr OutputDirectory;
+	// For each number in ModHierarchy, will create a directory level with the given number of subfolders
 	TVec<int> ModHierarchy;
+	// The max capacity for each parser
 	TUInt MaxParserCapacity;
-
+	// A lock to prevent concurrent access to adding files in the file system
 	std::mutex filesys_lock;
 public:
 	TSParserManager(TStr _OutputDir, TStr SchemaFile, TVec<int> _MHierarchy,
 		TInt _NumThreads = 1, TUInt _MaxParserCapacity = TUInt::Mx) : NumThreads(_NumThreads), 
 		Schema(), OutputDirectory(_OutputDir), ModHierarchy(_MHierarchy),
 		MaxParserCapacity(_MaxParserCapacity), filesys_lock() {
-
 		// create the directory if it does not already exist
 		if (!TDir::Exists(OutputDirectory)) TDir::GenDir(OutputDirectory);
-
-		/* Read Schema File */
+		// Read Schema File
 		Schema.ReadSchemaFile(SchemaFile);
-
-		// create filesys lock
-		//omp_init_lock(&filesys_lock);
 		//create parsers
 		for (int i=0; i<NumThreads; i++) {
 			parsers.Add(TSTimeParser(_OutputDir, &Schema, _MHierarchy, &filesys_lock, MaxParserCapacity));
 		}
 	}
 
-	/* Find all event data files and fill them into EventFileQueue */
+	// Read and parse raw data files from the given DirName, but do not sort them
 	void ReadRawData(TStr DirName);
+	// Sort the data created by ReadRawData
 	void SortBucketedData(bool ClearData=true);
 private:
 	/* Find all event data files and fill them into EventFileQueue */
@@ -54,7 +56,6 @@ private:
 	 *		dcmd: The DirCrawlMetadata collected thus far
 	 * 		DirIndex: the director level (as specified by Dirs in the schema)*/
 	void ExploreDataDirs(TStr & DirName, TDirCrawlMetaData dcmd, int DirIndex);
-
 
 	/* for sorting */
 	void TraverseBucketedData(TStr Dir, int level, bool ClearData, TVec<TStr> & DirPaths);

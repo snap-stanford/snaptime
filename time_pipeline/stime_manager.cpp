@@ -1,3 +1,4 @@
+// Read and parse raw data files from the given DirName
 void TSParserManager::ReadRawData(TStr DirName) {
     EventFileQueue.Clr();
     CollectRawData(DirName);
@@ -18,7 +19,7 @@ void TSParserManager::ReadRawData(TStr DirName) {
 
 void TSParserManager::CollectRawData(TStr DirName) {
     std::cout << "Start Collecting Files" << std::endl;
-    TDirCrawlMetaData dcmd (Schema.IdNames.Len());
+    TDirCrawlMetaData dcmd (Schema.KeyNames.Len());
     ExploreDataDirs(DirName, dcmd, 0);
     std::cout << "Done Collecting Files" << std::endl;
 }
@@ -27,7 +28,6 @@ void TSParserManager::ExploreDataDirs(TStr & DirName, TDirCrawlMetaData dcmd, in
     std::cout << "Explore Dirs "<< DirName.CStr() << std::endl;
     //adjust the metadata based on dir filename
     TStr DirBehavior = Schema.Dirs[DirIndex];
-
     TStr LocalFileName = TTimeFFile::GetLocalFileName(DirName);
     TDirCrawlMetaData::AdjustDcmd(LocalFileName, DirBehavior, dcmd, &Schema);
 

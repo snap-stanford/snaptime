@@ -1,8 +1,9 @@
 /* for now these all get converted to floats. this should change eventually */
-void TSTimeSymDir::InflateData(TQueryResult & r, TTime initialTimestamp, int duration, int granularity,
-	std::vector<std::vector<double> > result) {
-	int indices[r.Len()];
+void TSTimeSymDir::InflateData(TQueryResult & r, TStr initialTs, int duration, int granularity,
+	std::vector<std::vector<double> > & result) {
 
+	TTime initialTimestamp = Schema.ConvertTime(initialTs);
+	int indices[r.Len()];
 	int size = duration/granularity;
 	for (int i=0; i< r.Len(); i++) {
 		std::vector<double> empty_row (size);
@@ -47,7 +48,8 @@ double TSTimeSymDir::GetValFromResult(TSTime & data, int index) {
 	return result;
 }
 
-void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TStr OutputFile) {
+// Returns a query result. If OutputFile is not "", save into OutputFile
+void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TQueryResult & r, TStr OutputFile) {
 	// First find places where we can index by the symbolic filesystem
 	THash<TStr, FileQuery> QueryMap;
 	GetQuerySet(Query, QueryMap);
@@ -67,10 +69,11 @@ void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TStr OutputFile) {
 		}
 	}	
 	// retrieve the data and put into an executable
-	TQueryResult r;
 	UnravelQuery(SymDirQueries, 0, OutputDir, QueryMap, r);
-	TFOut outstream(OutputFile);
-	r.Save(outstream);
+	if (OutputDir.Len() != 0) {
+		TFOut outstream(OutputFile);
+		r.Save(outstream);
+	}
 }
 
 void TSTimeSymDir::GatherQueryResult(TStr FileName, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r) {
@@ -81,8 +84,8 @@ void TSTimeSymDir::GatherQueryResult(TStr FileName, THash<TStr, FileQuery> & Ext
     for (it = ExtraQueries.BegI(); it != ExtraQueries.EndI(); it++) {
         TStr QueryName = it.GetKey();
         TStr QueryVal = it.GetDat().QueryVal;
-        AssertR(Schema.IDName_To_Index.IsKey(QueryName), "Invalid query");
-        TInt IdIndex = Schema.IDName_To_Index.GetDat(QueryName);
+        AssertR(Schema.KeyNameToIndex.IsKey(QueryName), "Invalid query");
+        TInt IdIndex = Schema.KeyNameToIndex.GetDat(QueryName);
         if (t.KeyIds[IdIndex] != QueryVal) return; // does not match query
     }
 	r.Add(t);
@@ -151,8 +154,8 @@ void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
 	// find the dir names
 	for (int i=0; i<QuerySplit.Len(); i++) {
 		TStr & Query = QuerySplit[i];
-		AssertR(Schema.IDName_To_Index.IsKey(Query), "Query to split on SymDir not found");
-		TInt IDIndex = Schema.IDName_To_Index.GetDat(Query);
+		AssertR(Schema.KeyNameToIndex.IsKey(Query), "Query to split on SymDir not found");
+		TInt IDIndex = Schema.KeyNameToIndex.GetDat(Query);
 		SymDirs.Add(TTimeFFile::EscapeFileName(t.KeyIds[IDIndex]));
 	}
 	std::cout << SymDirs.Len() << std::endl;

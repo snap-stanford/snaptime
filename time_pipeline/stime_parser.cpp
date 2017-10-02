@@ -4,8 +4,8 @@ void TDirCrawlMetaData::AdjustDcmd(const TStr & Name, const TStr & Behavior, TDi
         dcmd.ts = schema->ConvertTime(Name);
         dcmd.TimeSet = true;
     } else {
-        AssertR(schema->IDName_To_Index.IsKey(Behavior), "Invalid schema");
-        int IDIndex = schema->IDName_To_Index.GetDat(Behavior);
+        AssertR(schema->KeyNameToIndex.IsKey(Behavior), "Invalid schema");
+        int IDIndex = schema->KeyNameToIndex.GetDat(Behavior);
         dcmd.RunningIDVec[IDIndex] = Name;
     }
 }
@@ -78,7 +78,7 @@ void TSTimeParser::ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd) {
 void TSTimeParser::GetRawTimeListsForIDs(TVec<int> & KeyIDs, TTIdVec & running_id) {
 	int num_sensors = Schema->FileSchemaIndexList[SENSOR].Len();
         TStr sensorKey("SENSOR");
-        TInt SensorIndex = Schema->IDName_To_Index.GetDat(sensorKey);
+        TInt SensorIndex = Schema->KeyNameToIndex.GetDat(sensorKey);
 	// only one pointer because sensor is already identified
 	if (running_id[SensorIndex] != TStr::GetNullStr()) {
 		if (!RawTimeData.IsKey(running_id)) {
@@ -151,7 +151,6 @@ void TSTimeParser::GetPrimDirNames(const TTIdVec & IdVec, TStrV& result) {
 }
 
 void TSTimeParser::FlushUnsortedData() {
-    std::cout<< "waiting to flush data"<<std::endl;
     mtx->lock();
     // lock filesystem (no concurrent access)
     std::cout<< "Flushing data"<<std::endl;

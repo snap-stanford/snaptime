@@ -7,9 +7,9 @@
  */
 class TDirCrawlMetaData {
 public:
-	TTIdVec RunningIDVec;
-	TTime ts;
-	bool TimeSet;
+	TTIdVec RunningIDVec; // a running list of the IDs for this run
+	TTime ts; // the time associated with this data point
+	bool TimeSet; // is the time set in this run
 public:
 	TDirCrawlMetaData() {
 		ts = 0;
@@ -23,7 +23,7 @@ public:
 	 * If Behavior is:
 	 * 		NULL: do nothing
 	 *		TIME: set dcmd's time to Name converted as timestamp
-	 *		default: treat Name as ID under Behavior's IDName
+	 *		default: treat Name as ID under Behavior's KeyName
 	 */
 	static void AdjustDcmd(const TStr & Name, const TStr & Behavior, TDirCrawlMetaData & dcmd, const TTSchema* schema);
 };

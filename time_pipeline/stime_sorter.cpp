@@ -15,7 +15,7 @@ void TSTimeSorter::SortBucketedDataDir(TStr DirPath, bool ClearData, TTSchema* s
     TTIdVec IDs = unsorted_record.KeyIds;
 
     // get type
-    TStr sensorName = IDs[schema_p->IDName_To_Index.GetDat(TStr("SENSOR"))];
+    TStr sensorName = IDs[schema_p->KeyNameToIndex.GetDat(TStr("SENSOR"))];
     TType type = schema_p->defaultType;
     if (schema_p->SensorType.IsKey(sensorName)) {
         type = schema_p->SensorType.GetDat(sensorName);

@@ -32,8 +32,8 @@ public:
 
 	void CreateSymbolicDirs();
 public:
-	void QueryFileSys(TVec<FileQuery> Query, TStr OutputFile);
-	static void InflateData(TQueryResult & r, TTime initialTimestamp, int duration, int granularity, std::vector<std::vector<double> > result);
+	void QueryFileSys(TVec<FileQuery> Query, TQueryResult & r, TStr OutputDir);
+	void InflateData(TQueryResult & r, TStr initialTimestamp, int duration, int granularity, std::vector<std::vector<double> > & result);
 private:
 	void TraverseEventFiles(TStr& Dir);
 	void CreateSymDirsForEventFile(TStr & EventFileName); // TODO, be able to do this for time split

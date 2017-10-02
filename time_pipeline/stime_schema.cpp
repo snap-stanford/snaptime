@@ -236,8 +236,6 @@ void TTSchema::PrintSchema() const {
 		std::cout << Dirs[i].CStr() << ", ";
 	}
 	std::cout << std::endl;
-
-	std::cout << std::endl;
 	std::cout << "FileSchema" << std::endl;
 	for (int i=0; i<FileSchema.Len(); i++) {
 		std::cout << "(" << FileSchema[i].GetVal1().CStr() << "," << FileSchema[i].GetVal2() << "), ";

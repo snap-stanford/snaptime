@@ -1,6 +1,7 @@
 
 // TODO: what if the vector is too big to hold in memory
 void TSTimeSorter::SortBucketedDataDir(TStr DirPath, bool ClearData, TTSchema* schema_p) {
+    std::cout << "attempting to sort " << DirPath.CloneCStr() << std::endl;
     TStrV FnV;
     // retrieve filenames
     TFFile::GetFNmV(DirPath, TStrV::GetV("bin"), false, FnV);
@@ -30,11 +31,11 @@ void TSTimeSorter::SortBucketedDataDir(TStr DirPath, bool ClearData, TTSchema* s
             break;
         case STRING:
             TSTimeSorter::WriteSortedData<TStr>(type, DirPath, IDs, BucketedData,
-                [] (TStr s) { return s;}, ClearData);
+                [] (TStr s) { return TStr(s.CloneCStr());}, ClearData);
             break;
         case INTEGER:
             TSTimeSorter::WriteSortedData<TInt>(type, DirPath, IDs, BucketedData,
-                [] (TStr s) { return TInt(s.GetInt());}, ClearData);
+                [] (TStr s) { return TInt(s.GetUInt());}, ClearData);
             break;
         default:
             TSTimeSorter::WriteSortedData<TFlt>(type, DirPath, IDs, BucketedData,

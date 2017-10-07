@@ -1,10 +1,15 @@
-CC = /usr/local/bin/gcc-7
-#CC = g++
-CXXFLAGS += -std=c++11 -fopenmp -Wall
+# CC = /usr/local/bin/gcc-7
+CCLOCAL = /usr/local/bin/gcc-7
+CC = g++
+CXXFLAGS += -std=c++11 -Wall -g
 LDFLAGS += -lrt
 
 SNAP = ../../../snap/snap-core
 GLIB = ../../../snap/glib-core
+
+TEST_LIBRARY = /usr/local/include/gtest/include/
+
+TEST_DIR = /tests
 
 
 DEPS = stime_parser.hpp stime_helper.hpp
@@ -20,6 +25,13 @@ SnapTime.o:
 
 test_snap_time: test_snap_time.cpp Snap.o SnapTime.o
 	$(CC) $(CXXFLAGS) -o test_snap_time test_snap_time.cpp Snap.o SnapTime.o -I$(GLIB) -I$(SNAP)
+
+schema_test: tests/schema_test.cpp SnapTime.o Snap.o
+	$(CC) $(CXXFLAGS) -o tests/schema_test tests/schema_test.cpp SnapTime.o Snap.o -lgtest -I$(GLIB) -I$(SNAP)
+
+parser_test: tests/parser_test.cpp SnapTime.o Snap.o
+	$(CC) $(CXXFLAGS) -o tests/parser_test tests/parser_test.cpp SnapTime.o Snap.o -lgtest -I$(GLIB) -I$(SNAP)
+
 
 # %.o: %.c
 # 	$(CC) -c $(CXXFLAGS) $< -I$(GLIB) -I$(SNAP) -o $@
@@ -40,4 +52,4 @@ test_snap_time: test_snap_time.cpp Snap.o SnapTime.o
  
 # # To remove generated files
 clean:
-	rm -f test_snap_time *.o
+	rm -f test_snap_time *.o tests/schema_test tests/parser_test

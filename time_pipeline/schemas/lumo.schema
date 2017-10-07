@@ -1,0 +1,11 @@
+# File Structure
+START Schema
+WearableID, ID
+DateTime, TIME
+SENSOR, ID
+SensorValue, SENSOR
+END Schema
+
+START SchemaTypes
+DEFAULT, INTEGER
+END SchemaTypes

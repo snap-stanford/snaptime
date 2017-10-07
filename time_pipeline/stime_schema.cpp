@@ -1,257 +1,224 @@
-// schema headers
-const char* const kFileHierachyHeader = "START FileHierarchy";
-const char* const kSchemaHeader = "START Schema";
-const char* const kTimeConversionHeader = "START TimeConvert";
-const char* const kTypesHeader = "START SchemaTypes";
-const char* const kFileHierachyFooter = "END FileHierarchy";
-const char* const kSchemaFooter = "END Schema";
-const char* const kTimeConversionFooter = "END TimeConvert";
-const char* const kTypesFooter = "END SchemaTypes";
-// Column Behaviors
-const char* const kNull = "NULL";
-const char* const kTime = "TIME";
-const char* const kID = "ID";
-const char* const kSensor = "SENSOR";
-// types
-const char* const kInteger = "INTEGER";
-const char* const kBoolean = "BOOLEAN";
-const char* const kFloat = "FLOAT";
-const char* const kString = "STRING";
-const char* const kDefault = "DEFAULT";
-const char* const kDelimLabel = "DELIM:";
+#include "stime_schema.hpp"
 
+const char * const FILE_HIERARCHY_HDR = "START FileHierarchy";
+const char * const SCHEMA_HDR = "START Schema";
+const char * const TYPES_HDR = "START SchemaTypes";
+const char * const TIME_CONVERT_HDR = "START TimeConvert";
 
-
-namespace {
-// GetNextSchemaLine reads in a line from the file, skipping comments and empty lines
-bool GetNextSchemaLine(std::ifstream & infile, std::string & line) {
-	while(std::getline(infile, line)) {
-		line = TCSVParse::trim(line);
-		if (line == "" || line[0] == '#') {
-			continue; //skip line if empty or if commented out
-		} else {
-			return true; // found line that isn't bogus
-		}
-	}
-	return false; //no valid lines
+// Reading Schema
+void TSchema::ReadSchemaFile(const TStr & filename) {
+  TFIn instream(filename);
+  bool completed_sections[NUM_SCHEMA_SECTIONS];
+  memset(completed_sections, 0, sizeof(completed_sections));
+  SchemaCategory schema_category;
+  bool has_time = false;
+  while(GetNextSchemaSection(instream, completed_sections, schema_category)) {
+    switch (schema_category) {
+      case FILE_HIERARCHY:
+        has_time |= ReadFileHierarchy(instream);
+        break;
+      case SCHEMA:
+        has_time |= ReadDataSchema(instream);
+        break;
+      case TYPES:
+        ReadTypes(instream);
+        break;
+      case TIME_CONVERT:
+        ReadTimeConversion(instream);
+        break;
+    }
+  }
+  AssertR(has_time, "Data points must set time to be valid");
+  AssertR(completed_sections[1], "must have a data section");
 }
 
-} // end anonymous namespace
-
-// Read in the schema file section by section
-void TTSchema::ReadSchemaFile(TStr filename) {
-	defaultType = FLOAT;
-	HasTime = false;
-	std::ifstream infile(filename.CStr()); // open file
-	AssertR(infile.is_open(), "could not open schema file");
-	std::string line;
-	bool hierarchyComplete = false, schemaComplete = false, timeConversionComplete = false, schemaTypes = false;
-	while(GetNextSchemaLine(infile, line)) {
-		if (line == kFileHierachyHeader) {
-			AssertR(!hierarchyComplete, "hierarchy section listed twice");
-			hierarchyComplete = true;
-			ReadFileHierarchy(infile);
-		} else if (line == kSchemaHeader) {
-			AssertR(!schemaComplete, "schema section listed twice");
-			schemaComplete = true;
-			ReadDataSchema(infile);
-		} else if (line == kTimeConversionHeader) {
-			AssertR(!timeConversionComplete, "time conversion section listed twice");
-			timeConversionComplete = true;
-			ReadTimeConversion(infile);
-		} else if (line == kTypesHeader) {
-			AssertR(!schemaTypes, "schema types section listed twice");
-			schemaTypes = true;
-			ReadSchemaTypes(infile);
-		} else {
-			AssertR(false, "Invalid start of schema section");
-		}
-	}
-	AssertR(HasTime, "must have a time value");
-	AssertR(schemaComplete, "must have a schema section");
-	if (!hierarchyComplete) {
-		Dirs.Add(kNull); // add default file hierarchy: just bare files
-	}
-	divideFileSchemaByType();
+bool TSchema::GetNextUncommentedLine(TFIn & instream, TStr & result) {
+  while(instream.GetNextLn(result)) {
+    if (result.Len() != 0 && !result.StartsWith("#")) return true;
+  }
+  return false;
 }
 
-// ConvertTime converts the string timeVal into a uint64 based on the time formatted string
-TTime TTSchema::ConvertTime(TStr timeVal) const {
-	if (!IsTimeStr) return timeVal.GetUInt64();
-	struct tm ts;
-	memset(&ts, 0,  sizeof(ts));
-	strptime(timeVal.CStr(), TimeFormatter.CStr(), &ts);
-	time_t t = mktime(&ts);
-	return (TTime) t;
+bool TSchema::GetNextSchemaSection(TFIn & instream, bool* completed_sections, 
+  SchemaCategory & schema_category) {
+  TStr section_hdr;
+  SchemaCategory temp = FILE_HIERARCHY;
+  int section_index = -1;
+  // no more lines left
+  if (!GetNextUncommentedLine(instream, section_hdr)) return false;
+  section_hdr = section_hdr.GetTrunc(); // trim whitespace
+  if (section_hdr == TStr(FILE_HIERARCHY_HDR)) {
+    temp = FILE_HIERARCHY;
+    section_index = 0;
+  } else if (section_hdr == TStr(SCHEMA_HDR)) {
+    temp = SCHEMA;
+    section_index = 1;
+  } else if (section_hdr == TStr(TYPES_HDR)) {
+    AssertR(completed_sections[SCHEMA], "Schema section must be listed before the types section");
+    temp = TYPES;
+    section_index = 2;
+  } else if (section_hdr == TStr(TIME_CONVERT_HDR)) {
+    temp = TIME_CONVERT;
+    section_index = 3;
+  } else {
+    AssertR(false, "Invalid start of schema section");
+  }
+  if (completed_sections[section_index]) {
+    AssertR(false, "Schema header " + section_hdr + " has already been used");
+  }
+  completed_sections[section_index] = true;
+  schema_category = temp;
+  return true;
 }
 
-// Add the given KeyName to the list of KeyNames and the KeyName hash
-void TTSchema::AddKeyName(TStr & KeyName) {
-	AssertR(!KeyNameToIndex.IsKey(KeyName), "Key already exists in ID Name Hash");
-	TInt new_index = KeyNames.Len();
-	KeyNames.Add(KeyName);
-	KeyNameToIndex.AddDat(KeyName, new_index);
+bool TSchema::GetSectionLine(TFIn & instream, TStr & line) {
+  AssertR(GetNextUncommentedLine(instream, line),
+    "Schema section needs to end with END");
+  return line != TStr("END");
 }
 
-//  ReadTimeConversion reads in the time conversion
-void TTSchema::ReadTimeConversion(std::ifstream & infile) {
-	std::string line;
-	bool success = GetNextSchemaLine(infile, line); // read the directory list
-	AssertR(success, "Incomplete Time Conversion Section");
-	IsTimeStr = true;
-	TimeFormatter = TStr(line.c_str());
-	success = GetNextSchemaLine(infile, line); // read the directory list
-	AssertR(success && line == kTimeConversionFooter, "Expected end of section");
+TInt TSchema::AddNewKeyName(const TStr & key_name) {
+  AssertR(!KeyNamesToIndex.IsKey(key_name), "key name "+ key_name
+          + " has already been used ");
+  TInt index = KeyNames.Len();
+  KeyNames.Add(key_name);
+  KeyNamesToIndex.AddDat(key_name, index);
+  TypeMaps.Add(THash<TStr, TType>());
+  return index;
 }
 
-void TTSchema::ReadFileHierarchy(std::ifstream & infile) {
-	std::string line;
-	bool success = GetNextSchemaLine(infile, line); // read the directory list
-	AssertR(success, "Expected hierarchy list or end of section");
-	if (line == kFileHierachyHeader) {
-		Dirs.Add(kNull);
-		return;
-	}
-	// option for delimiter
-	if (TStr(line.c_str()).IsPrefix(kDelimLabel)) {
-		std::string delim = line.substr(strlen(kDelimLabel));
-		AssertR(delim.length() == 1, "delimiter must be only one character");
-		FileDelimiter = delim[0];
-		success = GetNextSchemaLine(infile, line); // read the directory list
-		AssertR(success, "Expected hierarchy list or end section");
-		if (line == kFileHierachyFooter) {
-				Dirs.Add(kNull);
-				return;
-		}
-	}
-	Dirs = TCSVParse::readCSVLine(line, ',', true);
-	for (int i=0; i<Dirs.Len(); i++) {
-		TStr dir = Dirs[i];
-		if (dir == kTime) {
-			AssertR(!HasTime, "specified a time column twice");
-			HasTime = true;
-		} else if(dir != kNull) {
-			AddKeyName(dir);
-		}
-	}
-	// read END FileHierarchy:
-	success = GetNextSchemaLine(infile, line); // read "END"
-	AssertR(success && line == kFileHierachyFooter, "must end hierarchy section");
+bool TSchema::ReadFileHierarchy(TFIn & instream) {
+  bool has_time = false;
+  TStr schema_line;
+  while (GetSectionLine(instream, schema_line)) {
+    // section is still active
+    if (schema_line.StartsWith("DELIM:")) {
+      FileDelimiter = schema_line.LastCh();
+      continue;
+    } 
+    TStrV directories;
+    schema_line.SplitOnAllCh(',', directories);
+    for (int i=0; i<directories.Len(); i++) {
+      const TStr & directory = directories[i];
+      TStr dir_name = directory.GetTrunc();
+      TInt index;
+      TKeyType behavior;
+      if (dir_name == "NULL") {
+        index = -1;
+        behavior = NO_ID;
+      } else if (dir_name == "TIME") {
+        has_time = true;
+        index = -1;
+        behavior = TIME;
+      } else {
+        behavior = ID;
+        index = AddNewKeyName(dir_name);
+      }
+      Dirs.Add({behavior, index});
+    }
+  }
+  // If there are no directories set, add null
+  if (Dirs.Empty()) Dirs.Add({NO_ID, -1});
+  return has_time;
 }
 
-void TTSchema::ReadDataSchema(std::ifstream & infile) {
-	std::string line;
-	bool success = GetNextSchemaLine(infile, line);
-	AssertR(success, "Incomplete file hierarchy section");
-	int rowNum = 0;
-	int sensorNum = 0;
-	while (line != kSchemaFooter) {
-		TVec<TStr> row = TCSVParse::readCSVLine(line, ',', true);
-		AssertR(row.Len() == 2, TStr("Invalid hierarchy row: ") + TStr(line.c_str()));
-		TStr val = row[0];
-		TStr type_str = row[1];
-		TColType type;
-		if (type_str == kTime) {
-			type = TIME;
-			AssertR(!HasTime, "time defined twice");
-			HasTime = true;
-		} else if (type_str == kNull) {
-			type = NO_ID;
-		} else if (type_str == kID) {
-			type = ID;
-			AddKeyName(val);
-		} else if (type_str == kSensor) {
-			type = SENSOR;
-			sensorNum++;
-		}
-		else AssertR(false, TStr("invalid column type for file hierarchy: ") + TStr(line.c_str()));
-		TPair<TStr, TColType> col(val, type);
-		FileSchema.Add(col);
-		rowNum++;
-		AssertR(GetNextSchemaLine(infile, line), "ended file hierarchy section without proper footer");
-	}
-	AssertR(sensorNum > 0, "Must have at least one sensor value");
-	if (KeyNameToIndex.IsKey(TStr(kSensor))) {
-		//Sensor is already a key, so we have an ID field specifying the type of sensor
-		AssertR(sensorNum == 1, "Cannot have multiple sensors in one line if SENSOR is an KeyName");
-	} else {
-		TStr sensor_id = TStr(kSensor);
-		AddKeyName(sensor_id);
-	}
+bool TSchema::ReadDataSchema(TFIn & instream) {
+  bool has_time = false;
+  TStr schema_line;
+  while (GetSectionLine(instream, schema_line)) {
+    TStrV col;
+    schema_line.SplitOnAllCh(',', col);
+    AssertR(col.Len() == 2, "Schema section must have lines with 2 fields");
+    TStr name = col[0].GetTrunc();
+    TStr behavior = col[1].GetTrunc();
+    TKeyType col_behavior;
+    TInt col_index;
+    if (behavior == "TIME") {
+      has_time = true;
+      col_behavior = TIME;
+      col_index = -1;
+    } else if (behavior == "ID") {
+      col_behavior = ID;
+      col_index = AddNewKeyName(name);
+    } else if (behavior == "SENSOR") {
+      col_behavior = SENSOR;
+      col_index = SensorNames.Len();
+      SensorNames.Add(name);
+    } else {
+      AssertR(false, "invalid line in SCHEMA section");
+    }
+    Cols.Add({col_behavior, col_index});
+  }
+  AddNewKeyName("SENSOR");
+  AssertR(SensorNames.Len() > 0, "must have at least one sensor value");
+  return has_time;
 }
 
-void TTSchema::ReadSchemaTypes(std::ifstream & infile) {
-	std::string line;
-	bool success = GetNextSchemaLine(infile, line);
-	AssertR(success, "Incomplete Schema Type section");
-	while (line != "END SchemaTypes") {
-		TVec<TStr> row = TCSVParse::readCSVLine(line, ',', true);
-		AssertR(row.Len()==2, "Invalid row in schema types section");
-		TStr sensorName = row[0];
-		// get sensor type
-		TStr str_sensor_type = row[1];
-		TType sensor_type;
-		if (str_sensor_type == kFloat) sensor_type= FLOAT;
-		else if (str_sensor_type == kInteger) sensor_type= INTEGER;
-		else if (str_sensor_type == kBoolean) sensor_type= BOOLEAN;
-		else if (str_sensor_type == kString) sensor_type= STRING;
-		else AssertR(false, "invalid type in schema types section");
-
-		if (sensorName == kDefault) defaultType = sensor_type;
-		else {
-			//add type for specific sensor
-			AssertR(!SensorType.IsKey(sensorName), "sensor specifed twice in sensor type section");
-			SensorType.AddDat(sensorName, sensor_type);
-		}
-		AssertR(GetNextSchemaLine(infile, line), "ended sensor type section without END");
-	}
+void TSchema::ReadTypes(TFIn & instream) {
+  TStr schema_line;
+  while(GetSectionLine(instream, schema_line)) {
+    TStrV col;
+    schema_line.SplitOnAllCh(',', col);
+    AssertR(col.Len() >= 2, "Schema type section must have lines with 2 or 3 fields");
+    TStr name = col[0].GetTrunc();
+    TStr key_name, type;
+    if (name == "DEFAULT") {
+      type = col[1].GetTrunc();
+    } else {
+      AssertR(col.Len() == 3, "Schema type specification must have line with 3 fields");
+      key_name = col[1].GetTrunc();
+      type = col[2].GetTrunc();
+    }
+    TType id_type;
+    if (type == "BOOLEAN") {
+      id_type = BOOLEAN;
+    } else if (type == "INTEGER") {
+      id_type = INTEGER;
+    } else if (type == "FLOAT") {
+      id_type = FLOAT;
+    } else if (type == "STRING") {
+      id_type = STRING;
+    } else {
+      AssertR(false, "undefined type " + type);
+    }
+    if (name == "DEFAULT") {
+      DefaultType = id_type;
+    } else {
+      AssertR(KeyNamesToIndex.IsKey(key_name), "undefined key name in type section");
+      TInt index = KeyNamesToIndex.GetDat(key_name);
+      TypeMaps[index].AddDat(name, id_type);
+    }
+  }
 }
 
-
-void TTSchema::divideFileSchemaByType() {
-	for (int i = 0; i < FileSchema.Len(); i++) {
-		TPair<TStr, TColType> col = FileSchema[i];
-		FileSchemaIndexList[(int)col.GetVal2()].Add(TInt(i));
-	}
+void TSchema::ReadTimeConversion(TFIn & instream) {
+  TStr schema_formatter;
+  AssertR(GetSectionLine(instream, schema_formatter), 
+    "time convert section must define a format string");
+  IsTimeStr = true;
+  TimeFormatter = schema_formatter;
+  AssertR(!GetSectionLine(instream, schema_formatter),
+    "time converter needs to end with an END");
 }
 
-void TTSchema::PrintSchema() const {
-	std::cout << "KeyNames" << std::endl;
-	for (int i=0; i<KeyNames.Len(); i++) {
-		std::cout << KeyNames[i].CStr() << ", ";
-	}
-	std::cout << std::endl;
+// Schema getter and transform methods
+TTime TSchema::ConvertTime(const TStr & time_val) const {
+  if ( !IsTimeStr) return time_val.GetUInt64();
+  struct tm ts;
+  memset(&ts, 0,  sizeof(ts));
+  strptime(time_val.CStr(), TimeFormatter.CStr(), &ts);
+  time_t t = mktime(&ts);
+  return (TTime) t;
+}
 
-	std::cout << std::endl;
-	std::cout << "KeyNameToIndex" << std::endl;
-	std::cout << "{";
-	for (THashKeyDatI<TStr, TInt> it = KeyNameToIndex.BegI(); it != KeyNameToIndex.EndI(); it++) {
-		std::cout << it.GetKey().CStr() << ": " << it.GetDat().Val << ", ";
-	}
-	std::cout << "}" << std::endl;
-
-	std::cout << std::endl;
-	std::cout << "Dirs" << std::endl;
-	for (int i=0; i<Dirs.Len(); i++) {
-		std::cout << Dirs[i].CStr() << ", ";
-	}
-	std::cout << std::endl;
-	std::cout << "FileSchema" << std::endl;
-	for (int i=0; i<FileSchema.Len(); i++) {
-		std::cout << "(" << FileSchema[i].GetVal1().CStr() << "," << FileSchema[i].GetVal2() << "), ";
-	}
-	std::cout << std::endl;
-
-	std::cout << std::endl;
-	std::cout << "SensorType" << std::endl;
-	std::cout << "{";
-	for (THashKeyDatI<TStr, TType> it = SensorType.BegI(); it != SensorType.EndI(); it++) {
-		std::cout << it.GetKey().CStr() << ": " << it.GetDat() << ", ";
-	}
-	std::cout << "}" << std::endl;
-
-	std::cout << std::endl;
-	std::cout << "Default Type: " << defaultType << std::endl;
-	std::cout << "IsTimeStr: " << IsTimeStr << std::endl;
-	std::cout << "TimeFormatter: " << TimeFormatter.CStr() << std::endl;
+TType TSchema::GetType(const TStrV & IdVec) {
+  AssertR(IdVec.Len() == TypeMaps.Len(), "invalid ID vector");
+  // start from back of type specifier looking for types
+  for (int i=TypeMaps.Len()-1; i>=0; i--) {
+    TStr IdName = IdVec[i];
+    if (TypeMaps[i].IsKey(IdName)) {
+      return TypeMaps[i].GetDat(IdName);
+    }
+  }
+  return DefaultType;
 }

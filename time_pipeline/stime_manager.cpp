@@ -1,3 +1,4 @@
+#include "stime_manager.hpp"
 // Read and parse raw data files from the given DirName
 void TSParserManager::ReadRawData(TStr DirName) {
     EventFileQueue.Clr();
@@ -6,9 +7,9 @@ void TSParserManager::ReadRawData(TStr DirName) {
     for (int i=0; i<EventFileQueue.Len(); i++) {
         TStr fn = EventFileQueue[i].GetVal1();
         TDirCrawlMetaData dcmd = EventFileQueue[i].GetVal2();
-        std::cout << "pushing" << std::endl;
+        // this->parsers[0].ReadEventDataFile(fn, dcmd);
         auto parser_method = [this, fn, dcmd] (int id) { this->parsers[id].ReadEventDataFile(fn, dcmd);};
-	   p.push(parser_method);
+        p.push(parser_method);
     }
     p.stop(true);
     // perform last flushes
@@ -27,9 +28,9 @@ void TSParserManager::CollectRawData(TStr DirName) {
 void TSParserManager::ExploreDataDirs(TStr & DirName, TDirCrawlMetaData dcmd, int DirIndex) {
     std::cout << "Explore Dirs "<< DirName.CStr() << std::endl;
     //adjust the metadata based on dir filename
-    TStr DirBehavior = Schema.Dirs[DirIndex];
+    TPair<TKeyType, TInt> DirBehavior = Schema.Dirs[DirIndex];
     TStr LocalFileName = TTimeFFile::GetLocalFileName(DirName);
-    TDirCrawlMetaData::AdjustDcmd(LocalFileName, DirBehavior, dcmd, &Schema);
+    TDirCrawlMetaData::AdjustDcmd(LocalFileName, DirBehavior.Val2, DirBehavior.Val1, dcmd, &Schema);
 
     //base case: at the end of the dirs, so this is an event file. Add it to the
     // vector to be read later
@@ -52,7 +53,6 @@ void TSParserManager::SortBucketedData(bool ClearData) {
     TraverseBucketedData(OutputDirectory, hierarchySize, ClearData, dirPaths);
 
     // TODO: make this actually work in parallel delegate sorting tasks
-    //#pragma omp parallel for
     for (int i=0; i<dirPaths.Len(); i++) {
         TSTimeSorter::SortBucketedDataDir(dirPaths[i], ClearData, &Schema);
     }

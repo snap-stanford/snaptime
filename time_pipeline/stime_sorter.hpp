@@ -7,16 +7,16 @@ private:
 	private:
 		TCmp<TTime> cmp;
 	public:
-		int operator() (const TTRawData& x, const TTRawData& y) const {
+		int operator() (const TRawData& x, const TRawData& y) const {
 			return cmp(x.Val1, y.Val1);
 		}
 	};
 public:
-	static void SortBucketedDataDir(TStr DirPath, bool ClearData, TTSchema* schema_p);
+	static void SortBucketedDataDir(TStr DirPath, bool ClearData, TSchema* schema_p);
 
 private:
 	template<class TVal>
-	static void WriteSortedData(TType Type, TStr DirPath, TTIdVec& IDs, TTRawDataV& SortedData, TVal (*val_convert)(TStr),
+	static void WriteSortedData(TType Type, TStr DirPath, TStrV& IDs, TVec<TRawData>& SortedData, TVal (*val_convert)(TStr),
 		bool ClearData) {
 		// convert all strings into actual data types
 		TSTime result(Type, IDs);

@@ -1,11 +1,7 @@
 #ifndef TSTIME_H
 #define TSTIME_H
 
-typedef TUInt64 TTime; // time value
-enum TType {BOOLEAN, STRING, INTEGER, FLOAT};
-typedef TVec<TStr> TTIdVec; // id vector
-typedef TPair<TTime, TStr> TTRawData; //time raw data, left as string
-typedef TVec<TTRawData> TTRawDataV; // vector of raw data
+#include "stime_protos.hpp"
 
 /*
  * Basic time framework unit. Identifiable by a list of IDs (who's ordering)
@@ -17,7 +13,7 @@ typedef TVec<TTRawData> TTRawDataV; // vector of raw data
 class TSTime {
 public:
 	TType stime_type; // will be saved as an int
-    TTIdVec KeyIds;
+    TStrV KeyIds;
     void* TimeDataPtr; // pointer to data (must free). Data must be a vector of (TTime, stime_type)
 public:
 	// toy constructor if only manipulating metadata
@@ -26,17 +22,24 @@ public:
 		TimeDataPtr = NULL;
 	}
 
-	TSTime(TType _type, TTIdVec _KeyIds) : stime_type(_type), KeyIds(_KeyIds) {
+	TSTime(TSTime & t): stime_type(t.stime_type), KeyIds(t.KeyIds) {
+		TimeDataPtr = t.TimeDataPtr;
+	}
+
+	TSTime(TType _type, TStrV _KeyIds) : stime_type(_type), KeyIds(_KeyIds) {
 		CreateTimeData();
 	}
 
 	TSTime(TSIn& FIn) {
+		TimeDataPtr = NULL;
 		Load(FIn);
 	}
 
 	~TSTime() {
 		FreeTimeData();
 	}
+
+
 
 	void FreeTimeData() {
 		if (TimeDataPtr != NULL) {
@@ -93,7 +96,6 @@ private:
 		}
 		AssertR(TimeDataPtr != NULL, "allocation error");
 	}
-
 };
 
 /*
@@ -103,11 +105,12 @@ private:
  */
 class TUnsortedTime {
 public:
-    TTIdVec KeyIds;
-    TTRawDataV TimeData; // just a list of time values
+    TStrV KeyIds;
+    TVec<TRawData> TimeData; // just a list of time values
 public:
 	TUnsortedTime() : KeyIds(), TimeData() {}
-	TUnsortedTime(TTIdVec ids, TTRawDataV t_data) : KeyIds(ids), TimeData(t_data) {}
+	TUnsortedTime(TStrV & ids): KeyIds(ids), TimeData() {}
+	TUnsortedTime(TStrV ids, TVec<TRawData> t_data) : KeyIds(ids), TimeData(t_data) {}
 	void Save(TFOut& FOut) {
 		KeyIds.Save(FOut);
 		TimeData.Save(FOut);

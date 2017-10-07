@@ -7,7 +7,7 @@
  */
 class TDirCrawlMetaData {
 public:
-	TTIdVec RunningIDVec; // a running list of the IDs for this run
+	TStrV RunningIDVec; // a running list of the IDs for this run
 	TTime ts; // the time associated with this data point
 	bool TimeSet; // is the time set in this run
 public:
@@ -19,25 +19,22 @@ public:
 		ts = 0;
 		TimeSet = false;
 	}
-	/* Static method to adjust a DCMD
-	 * If Behavior is:
-	 * 		NULL: do nothing
-	 *		TIME: set dcmd's time to Name converted as timestamp
-	 *		default: treat Name as ID under Behavior's KeyName
-	 */
-	static void AdjustDcmd(const TStr & Name, const TStr & Behavior, TDirCrawlMetaData & dcmd, const TTSchema* schema);
+	// Add either Time or ID to  the dcmd
+	// If KeyType == NO_ID or TIME, then ignore index and just use value
+	// Otherwise, Index signifies the index into the KeyNames vector where this key should be placed
+	static void AdjustDcmd(const TStr & Value, TInt Index, TKeyType KeyType, TDirCrawlMetaData & dcmd, const TSchema* schema);
 };
 
 class TSTimeParser {
 public:
 	// Leave as TStr to TStr for now
-	THash<TTIdVec, TTRawDataV> RawTimeData;
+	THash<TStrV, TUnsortedTime > RawTimeData;
 	TVec<int> ModHierarchy; //hierarchy of moduluses on prim_hash for primary filesystem
 private:
 	TStr OutputDirectory; // OutputDirectory to start file structure.
 	TUInt CurrNumRecords;
 	TUInt MaxRecordCapacity; // records to read before flushing files
-	TTSchema* Schema; // pointer to schema
+	TSchema* Schema; // pointer to schema
 	std::mutex* mtx;
 public:
 
@@ -46,7 +43,7 @@ public:
 		CurrNumRecords = 0;
 	}
 
-	TSTimeParser(TStr OutputDir, TTSchema* _Schema, TVec<int> _ModHierarchy,
+	TSTimeParser(TStr OutputDir, TSchema* _Schema, TVec<int> _ModHierarchy,
 		std::mutex* _mtx, TUInt MaxCapacity) {
 
 		mtx = _mtx;
@@ -57,22 +54,19 @@ public:
 		CurrNumRecords = 0;
 		AssertR(TDir::Exists(OutputDirectory), "Output directory must exist");
 	}
-
 	//create initial primary hierarhcy
 	void FlushUnsortedData();
-	// crawl through OutputDirectory given a schema
-	// void ReadRawData(TStr DirName);
+	// Given a single data file, parse the data file and load it into the running
+	// time series vectors
 	void ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd);
 
 private:
-
 	// Reading data
-	// void ExploreDataDirs(TStr & DirName, TDirCrawlMetaData dcmd, int DirIndex);
-	void AddDataValue(const TTIdVec & IDVector, TStr & value, TTime ts);
-	void GetRawTimeListsForIDs(TVec<int> & KeyIDs, TTIdVec & running_id);
+	void AddDataValue(const TStrV & IDVector, TStr & value, TTime ts);
+	void GetRawTimeListsForIDs(TVec<int> & KeyIDs, TStrV & running_id);
 	// Saving Data
-	void GetPrimDirNames(const TTIdVec & IdVec, TStrV& result);
-	TStr CreatePrimDirs(TTIdVec & IdVec);
+	void GetPrimDirNames(const TStrV & IdVec, TStrV& result);
+	TStr CreatePrimDirs(TStrV & IdVec);
 
 };
 

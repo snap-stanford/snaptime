@@ -1,0 +1,26 @@
+START FileHierarchy
+NULL, MachineID
+END FileHierarchy
+
+# File Structure. Must have at least one sensor value. Can only have one sensor value if SENSOR is an IDName
+START Schema
+DateTime, TIME
+Used_fan_map, SENSOR
+Actual_flow_rate_turbine, SENSOR
+External_frost_thermostat_230Vac, SENSOR
+On_Off_HW_demand_230Vac, SENSOR
+On_Off_room_thermostat_230Vac_is_Y_S_compliant, SENSOR
+Flame_current, SENSOR
+Fan_speed, SENSOR
+Fan_speed_setpoint, SENSOR
+END Schema
+
+# Time conversion
+START TimeConvert
+%d.%m.%Y %H:%M:%S
+END TimeConvert
+
+START SchemaTypes
+DEFAULT, BOOLEAN
+bogus, INTEGER
+END SchemaTypes

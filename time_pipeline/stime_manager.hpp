@@ -1,5 +1,6 @@
 #ifndef STIME_MANAGER_H
 #define STIME_MANAGER_H
+#include "stime_parser.hpp"
 
 typedef TPair<TStr, TDirCrawlMetaData> TStrDCMD; /* represents info for one data file */
 
@@ -17,7 +18,7 @@ public:
 	// the number of threads used in the parser threadpool
 	TInt NumThreads;
 	// The schema for parsing the raw directory data
-	TTSchema Schema;
+	TSchema Schema;
 	// The output directory to place the primary parsed file hierarchy
 	TStr OutputDirectory;
 	// For each number in ModHierarchy, will create a directory level with the given number of subfolders
@@ -29,12 +30,10 @@ public:
 public:
 	TSParserManager(TStr _OutputDir, TStr SchemaFile, TVec<int> _MHierarchy,
 		TInt _NumThreads = 1, TUInt _MaxParserCapacity = TUInt::Mx) : NumThreads(_NumThreads), 
-		Schema(), OutputDirectory(_OutputDir), ModHierarchy(_MHierarchy),
+		Schema(SchemaFile), OutputDirectory(_OutputDir), ModHierarchy(_MHierarchy),
 		MaxParserCapacity(_MaxParserCapacity), filesys_lock() {
 		// create the directory if it does not already exist
 		if (!TDir::Exists(OutputDirectory)) TDir::GenDir(OutputDirectory);
-		// Read Schema File
-		Schema.ReadSchemaFile(SchemaFile);
 		//create parsers
 		for (int i=0; i<NumThreads; i++) {
 			parsers.Add(TSTimeParser(_OutputDir, &Schema, _MHierarchy, &filesys_lock, MaxParserCapacity));

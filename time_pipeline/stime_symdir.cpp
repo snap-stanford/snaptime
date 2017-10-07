@@ -1,4 +1,6 @@
 /* for now these all get converted to floats. this should change eventually */
+#include <limits.h>
+#include <stdlib.h>
 void TSTimeSymDir::InflateData(TQueryResult & r, TStr initialTs, int duration, int granularity,
 	std::vector<std::vector<double> > & result) {
 
@@ -55,7 +57,8 @@ void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TQueryResult & r, TStr Ou
 	GetQuerySet(Query, QueryMap);
 	TVec<FileQuery> ExtraQueries;
 	// one query struct per directory split
-	FileQuery SymDirQueries[QuerySplit.Len()];
+	TVec<FileQuery> SymDirQueries(QuerySplit.Len()); // one filequery per querysplit
+	// FileQuery SymDirQueries[QuerySplit.Len()];
 	for (int i=0; i<QuerySplit.Len(); i++) {
 		TStr dir_name = QuerySplit[i];
 		if (QueryMap.IsKey(dir_name)) {
@@ -76,28 +79,32 @@ void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TQueryResult & r, TStr Ou
 	}
 }
 
-void TSTimeSymDir::GatherQueryResult(TStr FileName, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r) {
-	TFIn inputstream(FileName);
-	TSTime t(inputstream);
+void TSTimeSymDir::GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r) {
+	TStrV FnV;
+	TTimeFFile::GetAllFiles(FileDir, FnV);
+	for (int i=0; i<FnV.Len(); i++) {
+		TStr FileName = FnV[i];
+		TFIn inputstream(FileName);
+		TSTime t(inputstream);
 
-	THash<TStr, FileQuery>::TIter it;
-    for (it = ExtraQueries.BegI(); it != ExtraQueries.EndI(); it++) {
-        TStr QueryName = it.GetKey();
-        TStr QueryVal = it.GetDat().QueryVal;
-        AssertR(Schema.KeyNameToIndex.IsKey(QueryName), "Invalid query");
-        TInt IdIndex = Schema.KeyNameToIndex.GetDat(QueryName);
-        if (t.KeyIds[IdIndex] != QueryVal) return; // does not match query
-    }
-	r.Add(t);
-	t.TimeDataPtr = NULL; // prevents deallocating the pointer we just added into the array.
-	//TODO, above is a hack. fix this
+		THash<TStr, FileQuery>::TIter it;
+	    for (it = ExtraQueries.BegI(); it != ExtraQueries.EndI(); it++) {
+	        TStr QueryName = it.GetKey();
+	        TStr QueryVal = it.GetDat().QueryVal;
+	        AssertR(Schema.KeyNamesToIndex.IsKey(QueryName), "Invalid query");
+	        TInt IdIndex = Schema.KeyNamesToIndex.GetDat(QueryName);
+	        if (t.KeyIds[IdIndex] != QueryVal) return; // does not match query
+	    }
+		r.Add(TSTime());
+		r[r.Len()-1].stime_type = t.stime_type;
+		r[r.Len()-1].KeyIds = t.KeyIds;
+		r[r.Len()-1].TimeDataPtr = t.TimeDataPtr;
+		t.TimeDataPtr = NULL; // prevents deallocating the pointer we just added into the array.
+	}
 }
 
-void TSTimeSymDir::UnravelQuery(FileQuery* SymDirQueries, int SymDirQueryIndex,
+void TSTimeSymDir::UnravelQuery(TVec<FileQuery> & SymDirQueries, int SymDirQueryIndex,
 	TStr& Dir, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r) {
-
-	std::cout << "unravelling " << Dir.CStr() << std::endl;
-
 	if (SymDirQueryIndex == QuerySplit.Len()) {
 		// base case: done traversing the symbolic directory, so we are in a directory
 		// of pure event files. gather these event files into r
@@ -119,6 +126,7 @@ void TSTimeSymDir::UnravelQuery(FileQuery* SymDirQueries, int SymDirQueryIndex,
 	}
 }
 
+// fill in a hash from the query name to the actual query
 void TSTimeSymDir::GetQuerySet(TVec<FileQuery> & Query, THash<TStr, FileQuery> & result) {
 	for (int i=0; i<Query.Len(); i++) {
 		result.AddDat(Query[i].QueryName, Query[i]);
@@ -154,8 +162,8 @@ void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
 	// find the dir names
 	for (int i=0; i<QuerySplit.Len(); i++) {
 		TStr & Query = QuerySplit[i];
-		AssertR(Schema.KeyNameToIndex.IsKey(Query), "Query to split on SymDir not found");
-		TInt IDIndex = Schema.KeyNameToIndex.GetDat(Query);
+		AssertR(Schema.KeyNamesToIndex.IsKey(Query), "Query to split on SymDir not found");
+		TInt IDIndex = Schema.KeyNamesToIndex.GetDat(Query);
 		SymDirs.Add(TTimeFFile::EscapeFileName(t.KeyIds[IDIndex]));
 	}
 	std::cout << SymDirs.Len() << std::endl;
@@ -175,6 +183,9 @@ void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
 	}
 	// create a sym link at the end of the path for this stime
 	TStr final_path = path + TStr("/") + TCSVParse::CreateIDVFileName(t.KeyIds);
-	int success = symlink(EventFileName.CStr(), final_path.CStr());
+	std::cout << EventFileName.CStr() << std::endl;
+	char* real_event_path = realpath(EventFileName.CStr(), NULL);
+	int success = symlink(real_event_path, final_path.CStr());
+	free(real_event_path);
 	AssertR(success != -1, "Failed to create symbolic directory");
 }

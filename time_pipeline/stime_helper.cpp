@@ -64,7 +64,7 @@ std::string TCSVParse::trim(std::string str)
 
 //fname is based on primary and secondary hash of ids
 // primHash_secHash (does not include .bin)
-TStr TCSVParse::CreateIDVFileName(const TTIdVec & IdVec) {
+TStr TCSVParse::CreateIDVFileName(const TStrV & IdVec) {
     TStr prim_hash = TInt::GetHexStr(IdVec.GetPrimHashCd()); //dirnames are based on hash of ids
     TStr sec_hash = TInt::GetHexStr(IdVec.GetSecHashCd()); //dirnames are based on hash of ids
     TStr result = prim_hash + TStr("_") + sec_hash;

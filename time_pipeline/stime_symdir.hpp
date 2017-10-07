@@ -17,14 +17,12 @@ public:
 	TStr InputDir;
 	TStr OutputDir;
 	TStrV QuerySplit;
-	TTSchema Schema;
+	TSchema Schema;
 	TBool FileSysCreated;
 public:
 	TSTimeSymDir(TStr _InputDir, TStr _OutputDir, TStrV _QuerySplit,
 		TStr SchemaFile) : InputDir(_InputDir), OutputDir(_OutputDir), 
-		QuerySplit(_QuerySplit), FileSysCreated(false) {	
-
-		Schema.ReadSchemaFile(SchemaFile);
+		QuerySplit(_QuerySplit), Schema(SchemaFile), FileSysCreated(false) {	
 		AssertR(TDir::Exists(InputDir), "Input directory must exist");
 		if (!TDir::Exists(OutputDir)) TDir::GenDir(OutputDir);
 		
@@ -38,7 +36,7 @@ private:
 	void TraverseEventFiles(TStr& Dir);
 	void CreateSymDirsForEventFile(TStr & EventFileName); // TODO, be able to do this for time split
 	void GatherQueryResult(TStr FileName, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r);
-	void UnravelQuery(FileQuery* SymDirQueries, int SymDirQueryIndex,
+	void UnravelQuery(TVec<FileQuery> & SymDirQueries, int SymDirQueryIndex,
 		TStr& Dir, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r);
 	void GetQuerySet(TVec<FileQuery> & Query, THash<TStr, FileQuery> & result);
 

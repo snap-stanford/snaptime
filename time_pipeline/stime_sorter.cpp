@@ -1,26 +1,19 @@
-
 // TODO: what if the vector is too big to hold in memory
-void TSTimeSorter::SortBucketedDataDir(TStr DirPath, bool ClearData, TTSchema* schema_p) {
+void TSTimeSorter::SortBucketedDataDir(TStr DirPath, bool ClearData, TSchema* schema_p) {
     std::cout << "attempting to sort " << DirPath.CloneCStr() << std::endl;
     TStrV FnV;
     // retrieve filenames
     TFFile::GetFNmV(DirPath, TStrV::GetV("bin"), false, FnV);
     TUnsortedTime unsorted_record;
-    TTRawDataV BucketedData;
+    TVec<TRawData> BucketedData;
     for (int i=0; i<FnV.Len(); i++) {
         TStr filename = FnV[i];
         TFIn infile(filename);
         unsorted_record.Load(infile);
         BucketedData.AddV(unsorted_record.TimeData);
     }
-    TTIdVec IDs = unsorted_record.KeyIds;
-
-    // get type
-    TStr sensorName = IDs[schema_p->KeyNameToIndex.GetDat(TStr("SENSOR"))];
-    TType type = schema_p->defaultType;
-    if (schema_p->SensorType.IsKey(sensorName)) {
-        type = schema_p->SensorType.GetDat(sensorName);
-    }
+    TStrV & IDs = unsorted_record.KeyIds;
+    TType type = schema_p->GetType(IDs);
 
     RawDataCmp comparator;
     BucketedData.SortCmp(comparator);

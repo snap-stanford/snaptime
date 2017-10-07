@@ -19,24 +19,29 @@
 #include "stime_sorter.hpp"
 
 struct SnapTimeConfiguration {
-	std::string InputRawDirectory;
-	std::string PrimaryDirectory;
-	std::string SymbolicDirectory;
-	std::string SchemaFile;
-	std::vector<int> ModHierarchy;
-	std::vector<std::string> SymbolicSplit;
-	int NumThreads; //for parsing
+	std::string InputRawDirectory; // The raw input directory
+	std::string PrimaryDirectory; // The directory where we place primary raw processed files
+	std::string SymbolicDirectory; // The directory where we place the symbolic query overlay
+	std::string SchemaFile; // The location of the schema file
+	std::vector<int> ModHierarchy; // The number of folders in each level of the Primary Directory
+	std::vector<std::string> SymbolicSplit; // The KeyNames over which we divide out the symbolic overlay
+	int NumThreads; //number of threads used for parsing
 };
 
+// Walk through the raw input directory to create the primary directory structure
 void GeneratePrimaryDirectories(SnapTimeConfiguration config);
 
+// Create the symbolic overlay after generating the primary directories
 void GenerateSymbolicIndex(SnapTimeConfiguration config);
 
+// Query the symbolic overlay and save the query result in the output file
 void QueryAndSaveSparse(SnapTimeConfiguration config, std::vector<std::pair<std::string, std::string> > Query, std::string OutputFile);
 
+// Query the symbolic overlay and inflate into the 2d vector
 std::vector<std::vector<double> > QueryAndInflate(SnapTimeConfiguration config, std::vector<std::pair<std::string, std::string> > Query,
 	std::string initialTimestamp, int duration, int granularity);
 
+// Load a previously saved query and inflate it into the 2d vector
 std::vector<std::vector<double> > LoadQueryResultAndInflate(SnapTimeConfiguration config, std::string QueryResultFile,
 	std::string initialTimestamp, int duration, int granularity);
 

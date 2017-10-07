@@ -1,6 +1,6 @@
 START FileHierarchy
 DELIM:	
-NULL, SENSOR
+NULL, SensorName
 END FileHierarchy
 
 START Schema

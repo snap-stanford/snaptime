@@ -1,57 +1,61 @@
 /* for now these all get converted to floats. this should change eventually */
 #include <limits.h>
 #include <stdlib.h>
-void TSTimeSymDir::InflateData(TQueryResult & r, TStr initialTs, int duration, int granularity,
-	std::vector<std::vector<double> > & result) {
-
-	// TTime initialTimestamp = Schema.ConvertTime(initialTs);
-	// int indices[r.Len()];
-	// int size = duration/granularity;
-	// for (int i=0; i< r.Len(); i++) {
-	// 	std::vector<double> empty_row (size);
-	// 	result.push_back(empty_row);
-	// 	indices[0] = 0;
-	// }
-	// for (int i=0; i < size; i++) { // for each timestamp
-	// 	TTime ts = initialTimestamp + i*duration;
-	// 	for (int j=0; j<r.Len(); j++) { // for each result
- // 			TSTime & data = r[j];
- // 			int new_index;
- // 			switch(data.stime_type) {
- // 				case BOOLEAN: new_index = TSTimeSymDir::AdvanceIndex <TBool> (data, ts, indices[j]); break;
-	// 	        case STRING: AssertR(false, "cannot yet inflate strings"); return;
-	// 	        case INTEGER: new_index = TSTimeSymDir::AdvanceIndex <TInt> (data, ts, indices[j]); break;
-	// 	        case FLOAT: new_index = TSTimeSymDir::AdvanceIndex <TFlt> (data, ts, indices[j]); break;
-	// 	    }
-		        	
- // 			indices[j] = new_index; // update running index
- // 			result[j][i] = TSTimeSymDir::GetValFromResult(data, new_index);
-	// 	}
-	// }
+void TSTimeSymDir::InflateData(TQueryResult & r, TStr initialTs, int duration, int granularity, std::vector<std::vector<double> > & result) {
+	TTime initialTimestamp = Schema.ConvertTime(initialTs);
+	int indices[r.Len()];
+	int size = duration/granularity;
+	for (int i=0; i< r.Len(); i++) {
+		std::vector<double> empty_row (size);
+		result.push_back(empty_row);
+		indices[0] = 0;
+	}
+	for (int i=0; i < size; i++) { // for each timestamp
+		TTime ts = initialTimestamp + i*duration;
+		for (int j=0; j<r.Len(); j++) { // for each result
+ 			TPt<TSTime> & data_ptr = r[j];
+ 			int new_index = AdvanceIndex(data_ptr, ts, indices[j]);
+ 			indices[j] = new_index;
+ 			result[j][i] = data_ptr->GetFloat(new_index);
+ 		}
+ 	}
 }
 
-double TSTimeSymDir::GetValFromResult(TSTime & data, int index) {
-	double result = 0;
-	// switch(data.stime_type) {
-	// 	case BOOLEAN: 
-	// 		result = (double) ((TVec<TPair<TTime, TBool> > *) data.TimeDataPtr)->GetVal(index).GetVal2();
-	// 		break;
- //        case STRING: 
- //        	AssertR(false, "cannot yet inflate strings");
- //        	result = -1;
- //        	break;
- //        case INTEGER:
-	// 		result =  double(((TVec<TPair<TTime, TInt> > *) data.TimeDataPtr)->GetVal(index).GetVal2());
-	// 		break;
- //        case FLOAT:
-	// 		result = ((TVec<TPair<TTime, TFlt> > *) data.TimeDataPtr)->GetVal(index).GetVal2();
-	// 		break;
-	// }
-	return result;
+int TSTimeSymDir::AdvanceIndex(TPt<TSTime> data_ptr, TTime time_stamp, int curr_index) {
+	if (curr_index >= data_ptr->Len() - 1) {
+		// at end of vector so keep index the same
+		return curr_index;
+	}
+	int index_after;
+	for (index_after = curr_index+1; index_after < data_ptr->Len(); index_after++) {
+		TTime next_ts = data_ptr->DirectAccessTime(index_after);
+		if (next_ts > time_stamp) {
+			// we hit the end of the window, so break out
+			return index_after -1;
+		}
+	}
+	return index_after - 1;
+}
+
+void TSTimeSymDir::SaveQuerySet(TQueryResult & r, TSOut & SOut) {
+	SOut.Save(r.Len());
+	for (int i=0; i<r.Len(); i++) {
+		r[i]->Save(SOut);
+	}
+}
+
+void TSTimeSymDir::LoadQuerySet(TQueryResult & r, TSIn & SIn) {
+	int length = 0;
+	SIn.Load(length);
+	for (int i=0; i<length; i++) {
+		TPt<TSTime> queryRow = TSTime::LoadSTime(SIn);
+		r.Add(queryRow);
+	}
 }
 
 // Returns a query result. If OutputFile is not "", save into OutputFile
-void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TQueryResult & r, TStr OutputFile) {
+void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TQueryResult & r, TStr & InitialTimeStamp,
+	TStr & FinalTimeStamp, TStr OutputFile) {
 	// First find places where we can index by the symbolic filesystem
 	THash<TStr, FileQuery> QueryMap;
 	GetQuerySet(Query, QueryMap);
@@ -71,37 +75,49 @@ void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TQueryResult & r, TStr Ou
 		}
 	}	
 	// retrieve the data and put into an executable
-	UnravelQuery(SymDirQueries, 0, OutputDir, QueryMap, r);
+	UnravelQuery(SymDirQueries, 0, OutputDir, QueryMap, r, InitialTimeStamp, FinalTimeStamp);
 	if (OutputDir.Len() != 0) {
 		TFOut outstream(OutputFile);
-		r.Save(outstream);
+		SaveQuerySet(r, outstream);
 	}
 }
 
-void TSTimeSymDir::UnravelQuery(TVec<FileQuery> & SymDirQueries, int SymDirQueryIndex,
-	TStr& Dir, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r) {
+void TSTimeSymDir::UnravelQuery(TVec<FileQuery> & SymDirQueries, int SymDirQueryIndex, TStr& Dir,
+	THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r, TStr & InitialTimeStamp, TStr & FinalTimeStamp) {
+
 	if (SymDirQueryIndex == QuerySplit.Len()) {
 		// base case: done traversing the symbolic directory, so we are in a directory
 		// of pure event files. gather these event files into r
-		GatherQueryResult(Dir, ExtraQueries, r);
+		GatherQueryResult(Dir, ExtraQueries, r, InitialTimeStamp, FinalTimeStamp);
 		return;
 	}
 	if (SymDirQueries[SymDirQueryIndex].QueryVal != TStr("")) {
 		// if this directory has a query value, go to that folder
 		TStr path = Dir + TStr("/") + TTimeFFile::EscapeFileName(SymDirQueries[SymDirQueryIndex].QueryVal);
 		AssertR(TDir::Exists(path), "Query does not exist in symbolic dir");
-		UnravelQuery(SymDirQueries, SymDirQueryIndex+1, path, ExtraQueries, r);
+		UnravelQuery(SymDirQueries, SymDirQueryIndex+1, path, ExtraQueries, r, InitialTimeStamp, FinalTimeStamp);
 	} else {
 		// this directory doesn't have a query value, so queue up gathering in all subfolders
 		TStrV FnV;
 		TTimeFFile::GetAllFiles(Dir, FnV);
 		for (int i=0; i<FnV.Len(); i++) {
-			UnravelQuery(SymDirQueries, SymDirQueryIndex+1, FnV[i], ExtraQueries, r);
+			UnravelQuery(SymDirQueries, SymDirQueryIndex+1, FnV[i], ExtraQueries, r, InitialTimeStamp, FinalTimeStamp);
 		}
 	}
 }
 
-void TSTimeSymDir::GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r) {
+void TSTimeSymDir::GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r,
+	TStr & InitialTimeStamp, TStr & FinalTimeStamp) {
+	// Get bounding timestamps
+	TTime initTS = 0;
+	if (InitialTimeStamp.Len() != 0) {
+		initTS = Schema.ConvertTime(InitialTimeStamp);
+	}
+	TTime finalTS = TTime::Mx;
+	if (FinalTimeStamp.Len() != 0) {
+		initTS = Schema.ConvertTime(FinalTimeStamp);
+	}
+
 	TStrV FnV;
 	TTimeFFile::GetAllFiles(FileDir, FnV);
 	for (int i=0; i<FnV.Len(); i++) {
@@ -117,6 +133,7 @@ void TSTimeSymDir::GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & Extr
 	        if (t->KeyIds[IdIndex] != QueryVal) return; // does not match query
 	    }
 	    t->LoadData(inputstream);
+	    t->TruncateVectorByTime(initTS, finalTS);
 		r.Add(t);
 	}
 }

@@ -27,51 +27,42 @@ void GenerateSymbolicIndex(SnapTimeConfiguration config) {
 	SymDirMaker.CreateSymbolicDirs();
 }
 
-void QueryAndSaveSparse(SnapTimeConfiguration config, std::vector<std::pair<std::string, std::string> > Query, std::string OutputFile) {
+TQueryResult Query(SnapTimeConfiguration config, QueryObject & Query, std::string OutputFile) {
 	TQueryResult r;
 	TStrV QuerySplit;
 	for (std::string split : config.SymbolicSplit) {
 		QuerySplit.Add(TStr(split.c_str()));
 	}
 	TSTimeSymDir SymDirMaker(TStr(config.PrimaryDirectory.c_str()), TStr(config.SymbolicDirectory.c_str()), QuerySplit, TStr(config.SchemaFile.c_str()));
+
 	TVec<FileQuery> FileQueries;
-	for (auto QueryValue : Query) {
+	for (auto QueryValue : Query.Queries) {
 		FileQueries.Add({TStr(QueryValue.first.c_str()), TStr(QueryValue.second.c_str())});
 	}
-	SymDirMaker.QueryFileSys(FileQueries, r, TStr(OutputFile.c_str()));
+	TStr initTS(Query.InitialTimestamp.c_str());
+	TStr finTS(Query.FinalTimestamp.c_str());
+	SymDirMaker.QueryFileSys(FileQueries, r, initTS,
+		finTS,TStr(OutputFile.c_str()));
+	return r;
 }
 
-std::vector<std::vector<double> > QueryAndInflate(SnapTimeConfiguration config, std::vector<std::pair<std::string, std::string> > Query,
-	std::string initialTimestamp, int duration, int granularity) {
-
+TQueryResult LoadQuery(std::string InputFile) {
 	TQueryResult r;
+	TFIn fin(TStr(InputFile.c_str()));
+	TSTimeSymDir::LoadQuerySet(r, fin);
+	return r;
+}
+
+// Only for doubles
+std::vector<std::vector<double> > InflateQuery(SnapTimeConfiguration config, TQueryResult r,
+	std::string initTS, int duration, int granularity) {
+	
+	std::vector<std::vector<double> >  result;
 	TStrV QuerySplit;
 	for (std::string split : config.SymbolicSplit) {
 		QuerySplit.Add(TStr(split.c_str()));
 	}
 	TSTimeSymDir SymDirMaker(TStr(config.PrimaryDirectory.c_str()), TStr(config.SymbolicDirectory.c_str()), QuerySplit, TStr(config.SchemaFile.c_str()));
-	TVec<FileQuery> FileQueries;
-	for (auto QueryValue : Query) {
-		FileQueries.Add({TStr(QueryValue.first.c_str()), TStr(QueryValue.second.c_str())});
-	}
-	SymDirMaker.QueryFileSys(FileQueries, r, "");
-	std::vector<std::vector<double> > result;
-	SymDirMaker.InflateData(r, TStr(initialTimestamp.c_str()), duration, granularity, result);
+	SymDirMaker.InflateData(r, TStr(initTS.c_str()), duration, granularity, result);
 	return result;
 }
-
-// std::vector<std::vector<double> > LoadQueryResultAndInflate(SnapTimeConfiguration config, std::string QueryResultFile,
-// 	std::string initialTimestamp, int duration, int granularity) {
-// 	TQueryResult r;
-// 	TFIn instream(TStr(QueryResultFile.c_str()));
-// 	r.Load(instream);
-
-// 	TStrV QuerySplit;
-// 	for (std::string split : config.SymbolicSplit) {
-// 		QuerySplit.Add(TStr(split.c_str()));
-// 	}
-// 	TSTimeSymDir SymDirMaker(TStr(config.PrimaryDirectory.c_str()), TStr(config.SymbolicDirectory.c_str()), QuerySplit, TStr(config.SchemaFile.c_str()));
-// 	std::vector<std::vector<double> > result;
-// 	SymDirMaker.InflateData(r, TStr(initialTimestamp.c_str()), duration, granularity, result);
-// 	return result;
-// }

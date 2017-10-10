@@ -28,19 +28,27 @@ struct SnapTimeConfiguration {
 	int NumThreads; //number of threads used for parsing
 };
 
+struct QueryObject {
+	std::vector<std::pair<std::string, std::string> > Queries; // IDName, ValueName
+	std::string InitialTimestamp; // in same format as the schema, "" to ignore
+	std::string FinalTimestamp; // in same format as schema, "" to ignore
+};
+
 // Walk through the raw input directory to create the primary directory structure
 void GeneratePrimaryDirectories(SnapTimeConfiguration config);
 
 // Create the symbolic overlay after generating the primary directories
 void GenerateSymbolicIndex(SnapTimeConfiguration config);
 
-// Query the symbolic overlay and save the query result in the output file
-void QueryAndSaveSparse(SnapTimeConfiguration config, std::vector<std::pair<std::string, std::string> > Query, std::string OutputFile);
+TQueryResult Query(SnapTimeConfiguration config, QueryObject & Query, std::string OutputFile); // "" if do not want to save
 
-// Query the symbolic overlay and inflate into the 2d vector
-// time is in seconds
-std::vector<std::vector<double> > QueryAndInflate(SnapTimeConfiguration config, std::vector<std::pair<std::string, std::string> > Query,
-	std::string initialTimestamp, int duration, int granularity);
+// // Query the symbolic overlay and save the query result in the output file
+// void QueryAndSaveSparse(SnapTimeConfiguration config, std::vector<std::pair<std::string, std::string> > Query, std::string OutputFile);
+
+// // Query the symbolic overlay and inflate into the 2d vector
+// // time is in seconds
+// std::vector<std::vector<double> > QueryAndInflate(SnapTimeConfiguration config, std::vector<std::pair<std::string, std::string> > Query,
+// 	std::string initialTimestamp, int duration, int granularity);
 
 // // Load a previously saved query and inflate it into the 2d vector
 // std::vector<std::vector<double> > LoadQueryResultAndInflate(SnapTimeConfiguration config, std::string QueryResultFile,

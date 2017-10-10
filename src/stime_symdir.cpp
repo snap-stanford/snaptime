@@ -153,7 +153,6 @@ void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
 	TFIn inputstream(EventFileName);
 	TPt<TSTime> t = TSTime::LoadSTime(inputstream, false);
 	TStrV SymDirs;
-	std::cout << QuerySplit.Len() << std::endl;
 	// find the dir names
 	for (int i=0; i<QuerySplit.Len(); i++) {
 		TStr & Query = QuerySplit[i];
@@ -171,7 +170,6 @@ void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
 	}
 	// create a sym link at the end of the path for this stime
 	TStr final_path = path + TStr("/") + TCSVParse::CreateIDVFileName(t->KeyIds);
-	std::cout << EventFileName.CStr() << std::endl;
 	char* real_event_path = realpath(EventFileName.CStr(), NULL);
 	int success = symlink(real_event_path, final_path.CStr());
 	free(real_event_path);

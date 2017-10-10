@@ -31,7 +31,7 @@ schema_test: tests/schema_test.cpp SnapTime.o Snap.o
 	$(CC) $(CXXFLAGS) -o tests/schema_test tests/schema_test.cpp SnapTime.o Snap.o -lgtest -I$(GLIB) -I$(SNAP)
 
 parser_test: tests/parser_test.cpp SnapTime.o Snap.o
-	$(CC) $(CXXFLAGS) -o tests/parser_test tests/parser_test.cpp SnapTime.o Snap.o -lgtest -I$(GLIB) -I$(SNAP)
+	$(CC) $(CXXFLAGS) -o tests/bin/parser_test tests/parser_test.cpp SnapTime.o Snap.o -lgtest -I$(GLIB) -I$(SNAP)
 
 
 # %.o: %.c
@@ -53,4 +53,5 @@ parser_test: tests/parser_test.cpp SnapTime.o Snap.o
  
 # # To remove generated files
 clean:
-	rm -f *.o tests/bin/* tests/Scratch/*
+	rm -f *.o tests/bin/*
+	rm -rf tests/Scratch/

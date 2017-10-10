@@ -1,5 +1,5 @@
 CC = g++
-CXXFLAGS += -std=c++11 -Wall
+CXXFLAGS += -std=c++11 -Wall -fopenmp -fPIC
 LDFLAGS += -shared
 
 SNAP = ../../../snap/snap-core
@@ -30,7 +30,7 @@ SnapTime_wrap.o: SnapTime_wrap.cxx
 	g++ -Wall -O2 -pg -ftree-vectorize $(CXXFLAGS) -c SnapTime_wrap.cxx -I$(GLIB) -I$(SNAP) -I/usr/include/python2.6 -I/usr/include/python2.7
 
 _SnapTime.so: SnapTime_wrap.o Snap.o SnapTime.o
-	g++ $(LDFLAGS) -lpython -dynamclib -o _SnapTime.so SnapTime_wrap.o Snap.o SnapTime.o
+	g++ $(LDFLAGS) -fopenmp -fPIC -o _SnapTime.so SnapTime_wrap.o Snap.o SnapTime.o
 
 SnapTime.py: SnapTime_wrap.cxx
 

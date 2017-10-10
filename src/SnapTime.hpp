@@ -40,21 +40,14 @@ void GeneratePrimaryDirectories(SnapTimeConfiguration config);
 // Create the symbolic overlay after generating the primary directories
 void GenerateSymbolicIndex(SnapTimeConfiguration config);
 
+// Query an object using the above QueryObject specifications, optionally saving the query into an outputfile
 TQueryResult Query(SnapTimeConfiguration config, QueryObject & Query, std::string OutputFile); // "" if do not want to save
 
-// // Query the symbolic overlay and save the query result in the output file
-// void QueryAndSaveSparse(SnapTimeConfiguration config, std::vector<std::pair<std::string, std::string> > Query, std::string OutputFile);
+// Load a previously saved query
+TQueryResult LoadQuery(std::string InputFile);
 
-// // Query the symbolic overlay and inflate into the 2d vector
-// // time is in seconds
-// std::vector<std::vector<double> > QueryAndInflate(SnapTimeConfiguration config, std::vector<std::pair<std::string, std::string> > Query,
-// 	std::string initialTimestamp, int duration, int granularity);
-
-// // Load a previously saved query and inflate it into the 2d vector
-// std::vector<std::vector<double> > LoadQueryResultAndInflate(SnapTimeConfiguration config, std::string QueryResultFile,
-// 	std::string initialTimestamp, int duration, int granularity);
-
-
-
+// Inflate a query into a double vector of doubles
+std::vector<std::vector<double> > InflateQuery(SnapTimeConfiguration config, TQueryResult r,
+	std::string initTS, int duration, int granularity);
 
 #endif //SNAPTIME_H

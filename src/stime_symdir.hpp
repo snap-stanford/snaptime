@@ -1,7 +1,7 @@
 #ifndef STIME_SYMDIR_H
 #define STIME_SYMDIR_H
 
-typedef TVec<TSTime> TQueryResult;
+typedef TVec<TPt<TSTime> > TQueryResult;
 
 struct FileQuery {
 	TStr QueryName; //name of ID

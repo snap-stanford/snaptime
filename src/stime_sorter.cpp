@@ -11,15 +11,15 @@ void TSTimeSorter::SortBucketedDataDir(TStr DirPath, bool ClearData, TSchema* sc
     unsorted_record.Load(infile);
     TStrV & IDs = unsorted_record.KeyIds;
     TType type = schema_p->GetType(IDs);
-    TSTime stime = TSTime::TypedTimeGenerator(type, IDs);
-    stime.AddUnsortedTime(unsorted_record);
+    TPt<TSTime> stime = TSTime::TypedTimeGenerator(type, IDs);
+    stime->AddUnsortedTime(unsorted_record);
     // add the rest of the unsorted times
     for (int i=1; i<FnV.Len(); i++) {
         TFIn instream(FnV[i]);
         unsorted_record.Load(infile);
-        stime.AddUnsortedTime(unsorted_record);
+        stime->AddUnsortedTime(unsorted_record);
     }
-    stime.Sort();
+    stime->Sort();
     
     TStr OutFile = DirPath + TStr("/") + TCSVParse::CreateIDVFileName(IDs) + TStr(".out");
     // clear directories
@@ -33,7 +33,7 @@ void TSTimeSorter::SortBucketedDataDir(TStr DirPath, bool ClearData, TSchema* sc
         }
     }
     TFOut outstream(OutFile);
-    stime.Save(outstream);
-
-
+    stime->Save(outstream);
 }
+
+TSTime::~TSTime() {}

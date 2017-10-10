@@ -7,9 +7,8 @@ const char* const ScratchInputData = "tests/test_data/";
 const char* const ScratchSymbolicDir = "tests/Scratch/SymDirOutput/";
 const char* const ScratchQueryOutput = "tests/Scratch/QueryOutput.bin";
 
-void CleanTestDirectory() {
-	if(TDir::Exists(ScratchDirectory)) {
-		AssertR(TDir::DelDir(ScratchDirectory), "could not delete scratch directory");
+void CreateTestDirectory() {
+	if (!TDir::Exists(ScratchDirectory)) {
+		AssertR(TDir::GenDir(ScratchDirectory), "could not create scratch directory");
 	}
-	AssertR(TDir::GenDir(ScratchDirectory), "could not create scratch directory");
 }

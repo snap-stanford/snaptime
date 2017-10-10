@@ -30,45 +30,47 @@ class TSTime {
 public:
 	TType Type;
 	TStrV KeyIds;
+	TCRef CRef;
 public:
 	TSTime() {}
-	TSTime(TType type, TStrV& key_ids) : Type(type), KeyIds(key_ids) {}
+	TSTime(TType type, TStrV& key_ids) : Type(type), KeyIds(key_ids), CRef() {}
+	virtual ~TSTime()=0;
+	TSTime(const TSTime & t) = delete; // cannot copy
+
 	// saves STime, prepends with the type.  Note that "Load" is static
 	// Converts string to value
-	virtual void AddUnsortedTime(TUnsortedTime & RawData) {}
+	virtual void AddUnsortedTime(TUnsortedTime & RawData) = 0;
 	// sort the time data.
-	virtual void Sort() {}
+	virtual void Sort() = 0;
 	// Generate an empty TSTime
-	static TSTime TypedTimeGenerator(TType type, TStrV& key_ids);
+	static TPt<TSTime> TypedTimeGenerator(TType type, TStrV& key_ids);
 	// Load a TSTime
-	static TSTime LoadSTime(TFIn& FIn, bool ShouldLoadData=true);
+	static TPt<TSTime> LoadSTime(TFIn& FIn, bool ShouldLoadData=true);
 	void Save(TSOut &SOut) {
 		SOut.Save(static_cast<int>(Type));
 		KeyIds.Save(SOut);
 		SaveData(SOut);
 	}
 	// Assumes that Type and keyid has already been loaded
-	virtual void LoadData(TSIn &SIn) {}
-	virtual void SaveData(TSOut &SOut) {}
+	virtual void LoadData(TSIn &SIn) = 0;
+	virtual void SaveData(TSOut &SOut) = 0;
+
+	// This is a hack
+	virtual TTime DirectAccessTime(int i) = 0;
+	virtual void* DirectAccessValue(int i) = 0;
+	virtual TInt Len() = 0;
 };
 
 template<typename TVal>
 class TSTypedTime : public TSTime {
-private:
-	class STimeDataCmp {
-	private:
-		TCmp<TTime> cmp;
-	public:
-		int operator() (const TPair<TTime, TVal> & x, const TPair<TTime, TVal> & y) const {
-			return cmp(x.Val1, y.Val1);
-		}
-	};
 public:
 	TVec<TPair<TTime, TVal> > TimeData;
 	std::function<TVal(TStr&)> ConvertString;
 
 	TSTypedTime(TType type, TStrV & key_ids, std::function<TVal(TStr&)> ConvertString_) : TSTime(type, key_ids),
 		TimeData(), ConvertString(ConvertString_) {}
+
+	~TSTypedTime() {}
 
 	void SaveData(TSOut & SOut) {
 		TimeData.Save(SOut);
@@ -84,9 +86,23 @@ public:
 		}
 	}
 	void Sort() {
-		STimeDataCmp cmp;
-		TimeData.SortCmp(cmp);
+		TimeData.Sort();
 	}
+
+	TTime DirectAccessTime(int i) {
+		AssertR(i < TimeData.Len(), "i is out of bounds for this STime");
+		return TimeData[i].Val1;
+	}
+
+	void* DirectAccessValue(int i) {
+		AssertR(i < TimeData.Len(), "i is out of bounds for this STime");
+		return &(TimeData[i].Val2);
+	}
+
+	TInt Len() {
+		return TimeData.Len();
+	}
+
 };
 
 #endif

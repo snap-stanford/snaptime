@@ -53,4 +53,4 @@ parser_test: tests/parser_test.cpp SnapTime.o Snap.o
  
 # # To remove generated files
 clean:
-	rm -f test_snap_time *.o tests/schema_test tests/parser_test
+	rm -f *.o tests/bin/* tests/Scratch/*

@@ -107,16 +107,16 @@ void TSTimeSymDir::GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & Extr
 	for (int i=0; i<FnV.Len(); i++) {
 		TStr FileName = FnV[i];
 		TFIn inputstream(FileName);
-		TSTime t = TSTime::LoadSTime(inputstream, false);
+		TPt<TSTime> t = TSTime::LoadSTime(inputstream, false);
 		THash<TStr, FileQuery>::TIter it;
 	    for (it = ExtraQueries.BegI(); it != ExtraQueries.EndI(); it++) {
 	        TStr QueryName = it.GetKey();
 	        TStr QueryVal = it.GetDat().QueryVal;
 	        AssertR(Schema.KeyNamesToIndex.IsKey(QueryName), "Invalid query");
 	        TInt IdIndex = Schema.KeyNamesToIndex.GetDat(QueryName);
-	        if (t.KeyIds[IdIndex] != QueryVal) return; // does not match query
+	        if (t->KeyIds[IdIndex] != QueryVal) return; // does not match query
 	    }
-	    t.LoadData(inputstream);
+	    t->LoadData(inputstream);
 		r.Add(t);
 	}
 }
@@ -151,7 +151,7 @@ void TSTimeSymDir::TraverseEventFiles(TStr& Dir) {
 
 void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
 	TFIn inputstream(EventFileName);
-	TSTime t = TSTime::LoadSTime(inputstream, false);
+	TPt<TSTime> t = TSTime::LoadSTime(inputstream, false);
 	TStrV SymDirs;
 	std::cout << QuerySplit.Len() << std::endl;
 	// find the dir names
@@ -159,7 +159,7 @@ void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
 		TStr & Query = QuerySplit[i];
 		AssertR(Schema.KeyNamesToIndex.IsKey(Query), "Query to split on SymDir not found");
 		TInt IDIndex = Schema.KeyNamesToIndex.GetDat(Query);
-		SymDirs.Add(TTimeFFile::EscapeFileName(t.KeyIds[IDIndex]));
+		SymDirs.Add(TTimeFFile::EscapeFileName(t->KeyIds[IDIndex]));
 	}
 	TStr path = OutputDir;
 	for (int i=0; i<SymDirs.Len(); i++) {
@@ -170,7 +170,7 @@ void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
 		}
 	}
 	// create a sym link at the end of the path for this stime
-	TStr final_path = path + TStr("/") + TCSVParse::CreateIDVFileName(t.KeyIds);
+	TStr final_path = path + TStr("/") + TCSVParse::CreateIDVFileName(t->KeyIds);
 	std::cout << EventFileName.CStr() << std::endl;
 	char* real_event_path = realpath(EventFileName.CStr(), NULL);
 	int success = symlink(real_event_path, final_path.CStr());

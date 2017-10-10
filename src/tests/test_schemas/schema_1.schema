@@ -1,0 +1,21 @@
+START FileHierarchy
+DELIM:,
+NULL, NULL, Foo
+END
+
+START Schema
+Bar, ID
+TimeVal, TIME
+Baz, SENSOR
+Fizz, SENSOR
+END
+
+START SchemaTypes
+DEFAULT, BOOLEAN
+AA, Foo, INTEGER
+Fizz, SENSOR, FLOAT
+END
+
+START TimeConvert
+%d.%m.%Y %H:%M:%S
+END

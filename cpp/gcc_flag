@@ -1,2 +1,0 @@
-g++ -I /lfs/local/0/abhisg/snap/snap-core/ -I /lfs/local/0/abhisg/snap/glib-core/ /lfs/local/0/abhisg/snap/snap-core/Snap.o create_data.cpp test.cpp -std=c++11 -lgomp
-

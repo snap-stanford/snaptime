@@ -1,0 +1,93 @@
+The external API for SnapTime lies in src/SnapTime.hpp.
+
+I. Configuration Objects:
+
+SnapTime Configuration is an object that configures the names and parameters
+for pre-processing the raw directory. Below is the C++ struct:
+
+struct SnapTimeConfiguration {
+	// InputRawDirectory is the path to the raw data directory
+	std::string InputRawDirectory;
+
+	// PrimaryDirectory is the path to where we place initial Snap binary files
+	std::string PrimaryDirectory;
+
+	// SymbolicDirectory: directory for a secondary hierarchy of symbolic links
+	std::string SymbolicDirectory;
+
+	// The location of the schema file
+	std::string SchemaFile;
+
+	// Each integer in ModHierarchy represents the number of folders in each
+	// level of the PrimaryDirectory. This configuration will change based
+	// on how much data you have, but typically you might start with 2 levels of
+	// 10 folders each (so pass in {10,10})
+	std::vector<int> ModHierarchy;
+
+	// The KeyNames over which we divide out the symbolic overlay. Use KeyNames
+	// which you will frequently query over.
+	std::vector<std::string> SymbolicSplit;
+
+	// Number of threads that the parser will use in its threadpool
+	int NumThreads;
+};
+
+QueryObject specifies the parameters for a single query of the above pre-processed
+filesystem.
+struct QueryObject {
+	// A list of {KeyName, Key Value} to query by. For example, if you wanted
+	// results from MachineID A, you would include {MachineID, A} in the vector
+	std::vector<std::pair<std::string, std::string> > Queries;
+
+	// The initial timestamp in the same string format as specified in the schema
+	// "" to ignore
+	std::string InitialTimestamp;
+
+	// The final timestamp in the same string format as specified in the schema
+	// "" to ignore
+	std::string FinalTimestamp;
+};
+
+Python: The STL interfaces are included in in the SWIG interface, so configuration
+objects have corresponding types in python.
+
+II. Methods
+**Caveat** PrimaryDirectory and SymbolicDirectory should not exist prior to running
+GeneratePrimaryDirectories and GenerateSymbolicIndex
+
+void GeneratePrimaryDirectories(SnapTimeConfiguration config);
+	- Parse the raw input directory into a primary directory
+
+void GenerateSymbolicIndex(SnapTimeConfiguration config);
+	- Create the symbolic index over the primary directory created in 
+	- GeneratePrimaryDirectories
+
+TTimeCollection Query(SnapTimeConfiguration config, QueryObject & Query, std::string OutputFile);
+	- Query an object using the above QueryObject specifications,
+	- optionally saving the query into an output file
+	- Returns a TTimeCollection object (see below)
+
+TTimeCollection LoadQuery(std::string InputFile);
+	- Load a previously saved query
+
+// Inflate a query into a double vector of doubles
+std::vector<std::vector<double> > InflateQuery(SnapTimeConfiguration config, TTimeCollection r, std::string initTS, int duration, int granularity);
+	- Inflate a query result into a synchrounous 2d vector of doubles.
+	- initTS is the timestamp to start at (formatted in the same string
+	- format as specified in the schema).
+	- duration and granularity are in terms of seconds
+	- will throw an error if you try to inflate a string into a double
+
+TTimeCollection has the following methods:
+	int Len();
+		- returns the number of individual time lists in the collection
+	int GetSTimeLen(int rowNum);
+		- returns the number of elements in the rowNum time list
+    TBool GetBool(int rowNum, int elemNum)
+    	- For the rowNum time list, return the element at elemNum as a bool
+	TFlt GetFloat(int rowNum, int elemNum)
+		- For the rowNum time list, return the element at elemNum as a float
+	TInt GetInt(int rowNum, int elemNum)
+		- For the rowNum time list, return the element at elemNum as a int
+	TStr GetStr(int rowNum, int elemNum)
+		- For the rowNum time list, return the element at elemNum as a string

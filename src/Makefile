@@ -1,13 +1,13 @@
 CC = g++
 CXXFLAGS += -std=c++11 -Wall -fopenmp -fPIC -fpermissive
 LDFLAGS += -shared
-
-SNAPDIR = ../../../snap
+# todo, switch this to snap-dev-64
+SNAPDIR = ../../snap
 SNAP = $(SNAPDIR)/snap-core
 GLIB = $(SNAPDIR)/glib-core
 GLIBADV = $(SNAPDIR)/glib-adv
 SNAPADV = $(SNAPDIR)/snap-adv
-SNAPPYTHON = ../../../snap-python/swig
+SNAPPYTHON = ../../snap-python/swig
 SNAPPYTHONBIN = $(SNAPPYTHON)/agm.o $(SNAPPYTHON)/agmfit.o $(SNAPPYTHON)/agmfast.o $(SNAPPYTHON)/cliques.o $(SNAPPYTHON)/n2v.o $(SNAPPYTHON)/biasedrandomwalk.o $(SNAPPYTHON)word2vec.o
 
 LIBRARIES = -I$(SNAP) -I$(GLIB) -I$(GLIBADV) -I$(SNAPADV)
@@ -41,9 +41,6 @@ _SnapTime.so: SnapTime_wrap.o Snap.o SnapTime.o
 	g++ $(LDFLAGS) -fopenmp -fPIC -o _SnapTime.so SnapTime_wrap.o Snap.o SnapTime.o $(SNAPPYTHONBIN) $(LIBRARIES) 
 
 SnapTime.py: SnapTime_wrap.cxx
-
-# test_snap_time: test_snap_time.cpp Snap.o SnapTime.o
-# 	$(CC) $(CXXFLAGS) -o test_snap_time test_snap_time.cpp Snap.o SnapTime.o -I$(GLIB) -I$(SNAP)
 
 stime_test: tests/stime_test.cpp SnapTime.o Snap.o
 	$(CC) $(CXXFLAGS) -o tests/bin/stime_test tests/stime_test.cpp SnapTime.o Snap.o -lgtest -I$(GLIB) -I$(SNAP)

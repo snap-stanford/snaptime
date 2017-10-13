@@ -41,13 +41,13 @@ void GeneratePrimaryDirectories(SnapTimeConfiguration config);
 void GenerateSymbolicIndex(SnapTimeConfiguration config);
 
 // Query an object using the above QueryObject specifications, optionally saving the query into an outputfile
-TQueryResult Query(SnapTimeConfiguration config, QueryObject & Query, std::string OutputFile); // "" if do not want to save
+TTimeCollection Query(SnapTimeConfiguration config, QueryObject & Query, std::string OutputFile); // "" if do not want to save
 
 // Load a previously saved query
-TQueryResult LoadQuery(std::string InputFile);
+TTimeCollection LoadQuery(std::string InputFile);
 
 // Inflate a query into a double vector of doubles
-std::vector<std::vector<double> > InflateQuery(SnapTimeConfiguration config, TQueryResult r,
+std::vector<std::vector<double> > InflateQuery(SnapTimeConfiguration config, TTimeCollection r,
 	std::string initTS, int duration, int granularity);
 
 #endif //SNAPTIME_H

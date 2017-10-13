@@ -1,7 +1,7 @@
 /* for now these all get converted to floats. this should change eventually */
 #include <limits.h>
 #include <stdlib.h>
-void TSTimeSymDir::InflateData(TQueryResult & r, TStr initialTs, int duration, int granularity, std::vector<std::vector<double> > & result) {
+void TSTimeSymDir::InflateData(TTimeCollection & r, TStr initialTs, int duration, int granularity, std::vector<std::vector<double> > & result) {
 	TTime initialTimestamp = Schema.ConvertTime(initialTs);
 	int indices[r.Len()];
 	int size = duration/granularity;
@@ -13,7 +13,7 @@ void TSTimeSymDir::InflateData(TQueryResult & r, TStr initialTs, int duration, i
 	for (int i=0; i < size; i++) { // for each timestamp
 		TTime ts = initialTimestamp + i*duration;
 		for (int j=0; j<r.Len(); j++) { // for each result
- 			TPt<TSTime> & data_ptr = r[j];
+ 			TPt<TSTime> & data_ptr = r.TimeCollection[j];
  			int new_index = AdvanceIndex(data_ptr, ts, indices[j]);
  			indices[j] = new_index;
  			result[j][i] = data_ptr->GetFloat(new_index);
@@ -37,14 +37,14 @@ int TSTimeSymDir::AdvanceIndex(TPt<TSTime> data_ptr, TTime time_stamp, int curr_
 	return index_after - 1;
 }
 
-void TSTimeSymDir::SaveQuerySet(TQueryResult & r, TSOut & SOut) {
+void TSTimeSymDir::SaveQuerySet(TTimeCollection & r, TSOut & SOut) {
 	SOut.Save(r.Len());
 	for (int i=0; i<r.Len(); i++) {
-		r[i]->Save(SOut);
+		r.TimeCollection[i]->Save(SOut);
 	}
 }
 
-void TSTimeSymDir::LoadQuerySet(TQueryResult & r, TSIn & SIn) {
+void TSTimeSymDir::LoadQuerySet(TTimeCollection & r, TSIn & SIn) {
 	int length = 0;
 	SIn.Load(length);
 	for (int i=0; i<length; i++) {
@@ -54,7 +54,7 @@ void TSTimeSymDir::LoadQuerySet(TQueryResult & r, TSIn & SIn) {
 }
 
 // Returns a query result. If OutputFile is not "", save into OutputFile
-void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TQueryResult & r, TStr & InitialTimeStamp,
+void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TTimeCollection & r, TStr & InitialTimeStamp,
 	TStr & FinalTimeStamp, TStr OutputFile) {
 	// First find places where we can index by the symbolic filesystem
 	THash<TStr, FileQuery> QueryMap;
@@ -83,7 +83,7 @@ void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TQueryResult & r, TStr & 
 }
 
 void TSTimeSymDir::UnravelQuery(TVec<FileQuery> & SymDirQueries, int SymDirQueryIndex, TStr& Dir,
-	THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r, TStr & InitialTimeStamp, TStr & FinalTimeStamp) {
+	THash<TStr, FileQuery> & ExtraQueries, TTimeCollection & r, TStr & InitialTimeStamp, TStr & FinalTimeStamp) {
 
 	if (SymDirQueryIndex == QuerySplit.Len()) {
 		// base case: done traversing the symbolic directory, so we are in a directory
@@ -106,7 +106,7 @@ void TSTimeSymDir::UnravelQuery(TVec<FileQuery> & SymDirQueries, int SymDirQuery
 	}
 }
 
-void TSTimeSymDir::GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r,
+void TSTimeSymDir::GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & ExtraQueries, TTimeCollection & r,
 	TStr & InitialTimeStamp, TStr & FinalTimeStamp) {
 	// Get bounding timestamps
 	TTime initTS = 0;

@@ -2,8 +2,6 @@
 #define STIME_SYMDIR_H
 #include "stime.hpp"
 
-typedef TVec<TPt<TSTime> > TQueryResult;
-
 struct FileQuery {
 	TStr QueryName; //name of ID
 	TStr QueryVal; //empty string if any value
@@ -30,21 +28,21 @@ public:
 	}
 
 	void CreateSymbolicDirs();
-	static void LoadQuerySet(TQueryResult & r, TSIn & SIn);
+	static void LoadQuerySet(TTimeCollection & r, TSIn & SIn);
 
 public:
-	void QueryFileSys(TVec<FileQuery> Query, TQueryResult & r, TStr & InitialTimeStamp, TStr & FinalTimeStamp, TStr OutputDir);
-	void InflateData(TQueryResult & r, TStr initialTimestamp, int duration, int granularity, std::vector<std::vector<double> > & result);
+	void QueryFileSys(TVec<FileQuery> Query, TTimeCollection & r, TStr & InitialTimeStamp, TStr & FinalTimeStamp, TStr OutputDir);
+	void InflateData(TTimeCollection & r, TStr initialTimestamp, int duration, int granularity, std::vector<std::vector<double> > & result);
 private:
 	void TraverseEventFiles(TStr& Dir);
 	void CreateSymDirsForEventFile(TStr & EventFileName); // TODO, be able to do this for time split
-	void GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r,
+	void GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & ExtraQueries, TTimeCollection & r,
 		TStr & InitialTimeStamp, TStr & FinalTimeStamp);
 	void UnravelQuery(TVec<FileQuery> & SymDirQueries, int SymDirQueryIndex,
-		TStr& Dir, THash<TStr, FileQuery> & ExtraQueries, TQueryResult & r, TStr & InitialTimeStamp, TStr & FinalTimeStamp);
+		TStr& Dir, THash<TStr, FileQuery> & ExtraQueries, TTimeCollection & r, TStr & InitialTimeStamp, TStr & FinalTimeStamp);
 	void GetQuerySet(TVec<FileQuery> & Query, THash<TStr, FileQuery> & result);
 
-	void SaveQuerySet(TQueryResult & r, TSOut & SOut);
+	void SaveQuerySet(TTimeCollection & r, TSOut & SOut);
 	int AdvanceIndex(TPt<TSTime> data_ptr, TTime time_stamp, int curr_index);
 };
 

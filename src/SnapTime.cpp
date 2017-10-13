@@ -27,8 +27,8 @@ void GenerateSymbolicIndex(SnapTimeConfiguration config) {
 	SymDirMaker.CreateSymbolicDirs();
 }
 
-TQueryResult Query(SnapTimeConfiguration config, QueryObject & Query, std::string OutputFile) {
-	TQueryResult r;
+TTimeCollection Query(SnapTimeConfiguration config, QueryObject & Query, std::string OutputFile) {
+	TTimeCollection r;
 	TStrV QuerySplit;
 	for (std::string split : config.SymbolicSplit) {
 		QuerySplit.Add(TStr(split.c_str()));
@@ -46,15 +46,15 @@ TQueryResult Query(SnapTimeConfiguration config, QueryObject & Query, std::strin
 	return r;
 }
 
-TQueryResult LoadQuery(std::string InputFile) {
-	TQueryResult r;
+TTimeCollection LoadQuery(std::string InputFile) {
+	TTimeCollection r;
 	TFIn fin(TStr(InputFile.c_str()));
 	TSTimeSymDir::LoadQuerySet(r, fin);
 	return r;
 }
 
 // Only for doubles
-std::vector<std::vector<double> > InflateQuery(SnapTimeConfiguration config, TQueryResult r,
+std::vector<std::vector<double> > InflateQuery(SnapTimeConfiguration config, TTimeCollection r,
 	std::string initTS, int duration, int granularity) {
 	
 	std::vector<std::vector<double> >  result;

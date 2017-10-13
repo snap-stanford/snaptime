@@ -31,13 +31,16 @@ class TSTime {
 public:
 	TType Type;
 	TStrV KeyIds;
+#ifndef SWIG
 	TCRef CRef; // for keeping track of pointers
+#endif
 public:
 	TSTime() {}
 	TSTime(TType type, TStrV& key_ids) : Type(type), KeyIds(key_ids), CRef() {}
 	virtual ~TSTime()=0;
+#ifndef SWIG
 	TSTime(const TSTime & t) = delete; // cannot copy
-
+#endif
 	// Given an unsorted time, convert each element in the unsorted time and add
 	// it to our TimeData vector. 
 	virtual void AddUnsortedTime(TUnsortedTime & RawData) = 0;
@@ -146,6 +149,21 @@ private:
 		}
 		return index;
 	}
+};
+
+class TTimeCollection {
+public:
+	TVec<TPt<TSTime> > TimeCollection;
+public:
+	TTimeCollection() : TimeCollection() {}
+	void Add(TPt<TSTime> t) {
+		TimeCollection.Add(t);
+	}
+	int Len() {return TimeCollection.Len();}
+        TBool GetBool(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetBool(elemNum);}
+	TFlt GetFloat(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetFloat(elemNum);}
+	TInt GetInt(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetInt(elemNum);}
+	TStr GetStr(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetStr(elemNum);}
 };
 
 #endif

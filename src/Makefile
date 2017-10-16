@@ -8,7 +8,7 @@ GLIB = $(SNAPDIR)/glib-core
 GLIBADV = $(SNAPDIR)/glib-adv
 SNAPADV = $(SNAPDIR)/snap-adv
 SNAPPYTHON = ../../snap-python/swig
-SNAPPYTHONBIN = $(SNAPPYTHON)/agm.o $(SNAPPYTHON)/agmfit.o $(SNAPPYTHON)/agmfast.o $(SNAPPYTHON)/cliques.o $(SNAPPYTHON)/n2v.o $(SNAPPYTHON)/biasedrandomwalk.o $(SNAPPYTHON)word2vec.o
+SNAPPYTHONBIN = $(SNAPPYTHON)/agm.o $(SNAPPYTHON)/agmfit.o $(SNAPPYTHON)/agmfast.o $(SNAPPYTHON)/cliques.o $(SNAPPYTHON)/n2v.o $(SNAPPYTHON)/biasedrandomwalk.o $(SNAPPYTHON)/word2vec.o
 
 LIBRARIES = -I$(SNAP) -I$(GLIB) -I$(GLIBADV) -I$(SNAPADV)
 

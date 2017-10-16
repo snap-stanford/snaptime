@@ -125,16 +125,22 @@ void TSTimeSymDir::GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & Extr
 		TFIn inputstream(FileName);
 		TPt<TSTime> t = TSTime::LoadSTime(inputstream, false);
 		THash<TStr, FileQuery>::TIter it;
+		bool validQuery = true;
 	    for (it = ExtraQueries.BegI(); it != ExtraQueries.EndI(); it++) {
 	        TStr QueryName = it.GetKey();
 	        TStr QueryVal = it.GetDat().QueryVal;
 	        AssertR(Schema.KeyNamesToIndex.IsKey(QueryName), "Invalid query");
 	        TInt IdIndex = Schema.KeyNamesToIndex.GetDat(QueryName);
-	        if (t->KeyIds[IdIndex] != QueryVal) return; // does not match query
+	        if (t->KeyIds[IdIndex] != QueryVal) {
+			validQuery = false;
+			break; // does not match query
+		}
 	    }
-	    t->LoadData(inputstream);
-	    t->TruncateVectorByTime(initTS, finalTS);
+	    if (validQuery) {
+	    	t->LoadData(inputstream);
+	    	t->TruncateVectorByTime(initTS, finalTS);
 		r.Add(t);
+	    }
 	}
 }
 

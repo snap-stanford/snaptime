@@ -160,11 +160,15 @@ public:
 		TimeCollection.Add(t);
 	}
 	int Len() {return TimeCollection.Len();}
-    TBool GetBool(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetBool(elemNum);}
+	TStrV GetIds(int rowNum) {return TimeCollection[rowNum]->KeyIds;}
+	TType GetType(int rowNum) {return TimeCollection[rowNum]->Type;}
+	TTime GetTime(int rowNum, int elemNum) {return TimeCollection[rowNum]->DirectAccessTime(elemNum);}
+        TBool GetBool(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetBool(elemNum);}
 	TFlt GetFloat(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetFloat(elemNum);}
 	TInt GetInt(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetInt(elemNum);}
 	TStr GetStr(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetStr(elemNum);}
 	int GetSTimeLen(int rowNum) {return TimeCollection[rowNum]->Len();}
+
 };
 
 #endif

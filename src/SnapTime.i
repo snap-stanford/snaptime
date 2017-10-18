@@ -6,11 +6,13 @@
 	#include "Snap.h"
 	#include "SnapTime.hpp"
 	#include "stime.hpp"
+        #include "stime_protos.hpp"
 %}
 %include "../../snap-python/swig/snap.i"
 %include "Snap.h"
 %include "SnapTime.hpp"
 %include "stime.hpp"
+%include "stime_protos.hpp"
 %template(StringVector) std::vector<std::string>;
 %template(IntVector) std::vector<int>;
 %template(StringPair) std::pair<std::string, std::string>;

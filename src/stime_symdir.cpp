@@ -11,7 +11,7 @@ void TSTimeSymDir::InflateData(TTimeCollection & r, TStr initialTs, int duration
 		indices[0] = 0;
 	}
 	for (int i=0; i < size; i++) { // for each timestamp
-		TTime ts = initialTimestamp + i*duration;
+		TTime ts = initialTimestamp + i*granularity;
 		for (int j=0; j<r.Len(); j++) { // for each result
  			TPt<TSTime> & data_ptr = r.TimeCollection[j];
  			int new_index = AdvanceIndex(data_ptr, ts, indices[j]);

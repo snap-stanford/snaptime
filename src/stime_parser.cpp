@@ -26,12 +26,19 @@ void TSTimeParser::ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd) {
     std::cout << "reading file " << FileName.CStr() << std::endl;
     int line_no = 0;
     std::string line;
-    TStrV DataValues;
+
+    // CurrentIds with sensor name "PlACE_HOLDER"
+    TStrV CurrIds;
+
+    // Have a vector of key ids for current unsorted data lists
+    TVec<int> SensorKeyIds(Schema->SensorNames.Len());
+
     while(std::getline(infile, line)) {
         line_no++;
         TVec<TStr> row = TCSVParse::readCSVLine(line, Schema->FileDelimiter);
         if (CurrNumRecords % 100000 == 0) std::cout << "lines read " << CurrNumRecords << " by " << " in " << FileName.CStr() << std::endl;
         TVec<TPair<TStr, TInt> > SensorValues; // {Value, Sensor Index}
+
         // read all the data in this row
         for (int i=0; i<Schema->Cols.Len(); i++) {
             if (Schema->Cols[i].Val1 == SENSOR) { // if sensor add to SensorValues and move on
@@ -40,13 +47,24 @@ void TSTimeParser::ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd) {
             }
             TDirCrawlMetaData::AdjustDcmd(row[i], Schema->Cols[i].Val2, Schema->Cols[i].Val1, dcmd, Schema);
         }
+
+        // set or update the running id list
+        TDirCrawlMetaData::AdjustDcmd(TStr("PlACE_HOLDER"), Schema->KeyNames.Len()-1, SENSOR, dcmd, Schema); // set to placeholder
+        if (CurrIds != dcmd.RunningIDVec) {
+            // new ID vec, so update pointers
+            CurrIds = dcmd.RunningIDVec;
+            for (int i=0; i<Schema->SensorNames.Len(); i++) {
+                TDirCrawlMetaData::AdjustDcmd(Schema->SensorNames[SensorValues[i].Val2], Schema->KeyNames.Len()-1, SENSOR, dcmd, Schema);
+                if (!RawTimeData.IsKey(dcmd.RunningIDVec)) {
+                    RawTimeData.AddDat(dcmd.RunningIDVec, TUnsortedTime(dcmd.RunningIDVec));
+                }
+            }
+            SensorKeyIds[i] = RawTimeData.GetKeyId(dcmd.RunningIDVec);
+        }
+
         // Update parser with this data
         for (int i=0; i<SensorValues.Len(); i++) {
-            TDirCrawlMetaData::AdjustDcmd(Schema->SensorNames[SensorValues[i].Val2], Schema->KeyNames.Len()-1, SENSOR, dcmd, Schema);
-            if (!RawTimeData.IsKey(dcmd.RunningIDVec)) {
-                RawTimeData.AddDat(dcmd.RunningIDVec, TUnsortedTime(dcmd.RunningIDVec));
-            }
-            RawTimeData.GetDat(dcmd.RunningIDVec).TimeData.Add({dcmd.ts, SensorValues[i].Val1});
+            RawTimeData[SensorKeyIds[i]].TimeData.Add({dcmd.ts, SensorValues[i].Val1});
             CurrNumRecords++;
         }
     	if (CurrNumRecords >= MaxRecordCapacity) {

@@ -8,7 +8,7 @@ void TSTimeSymDir::InflateData(TTimeCollection & r, TStr initialTs, int duration
 	for (int i=0; i< r.Len(); i++) {
 		std::vector<double> empty_row (size);
 		result.push_back(empty_row);
-		indices[0] = 0;
+		indices[i] = 0;
 	}
 	for (int i=0; i < size; i++) { // for each timestamp
 		TTime ts = initialTimestamp + i*granularity;

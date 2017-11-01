@@ -206,7 +206,7 @@ TTime TSchema::ConvertTime(const TStr & time_val) const {
   if ( !IsTimeStr) return time_val.GetUInt64();
   struct tm ts;
   memset(&ts, 0,  sizeof(ts));
-  strptime(time_val.CStr(), TimeFormatter.CStr(), &ts);
+  AssertR(strptime(time_val.CStr(), TimeFormatter.CStr(), &ts) != NULL, "invalid time formatter");
   time_t t = mktime(&ts);
   return (TTime) t;
 }

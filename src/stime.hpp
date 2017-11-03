@@ -20,6 +20,8 @@ public:
 		TimeData.Save(SOut);
 	}
 	void Load(TSIn& SIn) {
+                KeyIds.Clr();
+                TimeData.Clr();
 		KeyIds.Load(SIn);
 		TimeData.Load(SIn);
 	}

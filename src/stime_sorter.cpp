@@ -9,14 +9,14 @@ void TSTimeSorter::SortBucketedDataDir(TStr DirPath, bool ClearData, TSchema* sc
     TFIn infile(FnV[0]);
     TUnsortedTime unsorted_record;
     unsorted_record.Load(infile);
-    TStrV & IDs = unsorted_record.KeyIds;
+    TStrV IDs = unsorted_record.KeyIds;
     TType type = schema_p->GetType(IDs);
     TPt<TSTime> stime = TSTime::TypedTimeGenerator(type, IDs);
     stime->AddUnsortedTime(unsorted_record);
     // add the rest of the unsorted times
     for (int i=1; i<FnV.Len(); i++) {
         TFIn instream(FnV[i]);
-        unsorted_record.Load(infile);
+        unsorted_record.Load(instream);
         stime->AddUnsortedTime(unsorted_record);
     }
     stime->Sort();

@@ -58,8 +58,8 @@ void TSTimeParser::ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd) {
                 if (!RawTimeData.IsKey(dcmd.RunningIDVec)) {
                     RawTimeData.AddDat(dcmd.RunningIDVec, TUnsortedTime(dcmd.RunningIDVec));
                 }
-            }
-            SensorKeyIds[i] = RawTimeData.GetKeyId(dcmd.RunningIDVec);
+                SensorKeyIds[i] = RawTimeData.GetKeyId(dcmd.RunningIDVec);
+           }
         }
 
         // Update parser with this data
@@ -69,6 +69,7 @@ void TSTimeParser::ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd) {
         }
     	if (CurrNumRecords >= MaxRecordCapacity) {
             FlushUnsortedData();
+            CurrIds.Clr();
         }
     }
 }

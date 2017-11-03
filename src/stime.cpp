@@ -9,7 +9,12 @@ TPt<TSTime> TSTime::TypedTimeGenerator(TType type, TStrV& key_ids) {
 			 auto ptr = new TSTypedTime<TStr>(type, key_ids,  [] (TStr & s) { return TStr(s.CloneCStr());});
 			 return TPt<TSTime> (ptr);
 		} case INTEGER: {
-			 auto ptr = new TSTypedTime<TInt>(type, key_ids,  [] (TStr & s) { return TInt(s.GetUInt());});
+			 auto ptr = new TSTypedTime<TInt>(type, key_ids,  [] (TStr & s) {
+				if (!s.IsUInt()) {
+					return TInt(-1);
+				}
+				return TInt(s.GetUInt());
+			});
 			 return TPt<TSTime> (ptr);
 		} default:{
 			 auto ptr = new TSTypedTime<TFlt>(type, key_ids, [] (TStr & s) { return TFlt(s.GetFlt());});

@@ -1,6 +1,7 @@
 #ifndef STIME_SYMDIR_H
 #define STIME_SYMDIR_H
 #include "stime.hpp"
+#include "stime_helper.hpp"
 
 struct FileQuery {
 	TStr QueryName; //name of ID
@@ -45,6 +46,53 @@ private:
 	void SaveQuerySet(TTimeCollection & r, TSOut & SOut);
 	int AdvanceIndex(TPt<TSTime> data_ptr, TTime time_stamp, int curr_index);
 };
+
+// for finding summary statistics
+namespace summary {
+
+	void GetEventFileList(TStr & Dir, TStrV & Files) {
+		if(!TDir::Exists(Dir)) {
+			Files.Add(Dir);
+		} else {
+			TStrV FnV;
+			TTimeFFile::GetAllFiles(Dir, FnV); // get the directories
+			for (int i=0; i<FnV.Len(); i++) {
+				GetEventFileList(FnV[i], Files);
+			}
+		}
+	}
+	void SummaryStats(TStr & RawDir, TStr & SchemaFile, TStr & OutputFile) {
+		TSchema Schema(SchemaFile);
+		TStrV EventFileList;
+		GetEventFileList(RawDir, EventFileList);
+		TVec<TStrV> rows;
+		for (int i = 0; i<EventFileList.Len(); i++) {
+			TFIn inputstream(EventFileList[i]);
+			TPt<TSTime> t = TSTime::LoadSTime(inputstream, false);
+			TStrV row = t->KeyIds;
+			TInt length = t->Len();
+			TTime t_zero = t->DirectAccessTime(0);
+			TTime t_last = t->DirectAccessTime(length-1);
+			TStr t_zero_str = Schema.ConvertTimeToStr(t_zero);
+			TStr t_last_str = Schema.ConvertTimeToStr(t_last);
+			row.Add(t_zero_str); // start time
+			row.Add(t_last_str); // end time
+			row.Add(length.GetStr()); // number of values
+			rows.Add(row);
+		}
+		rows.Sort();
+		TFOut outstream(OutputFile);
+
+		for (int i = 0; i<rows.Len(); i++) {
+			for (int j=0; j<rows[i].Len(); j++) {
+				outstream.PutStr(rows[i][j]);
+				outstream.PutCh(',');
+			}
+			outstream.PutLn();
+		}
+		// Go through each ID
+	}
+}
 
 
 

@@ -211,6 +211,14 @@ TTime TSchema::ConvertTime(const TStr & time_val) const {
   return (TTime) t;
 }
 
+TStr TSchema::ConvertTimeToStr(TTime t) const {
+  if (!IsTimeStr) return t.GetStr();
+  char buf[30];
+  time_t ttime = time_t(t);
+  strftime(buf, 30, TimeFormatter.CStr(), localtime(&ttime));
+  return TStr(buf);
+}
+
 TType TSchema::GetType(const TStrV & IdVec) {
   AssertR(IdVec.Len() == TypeMaps.Len(), "invalid ID vector");
   // start from back of type specifier looking for types

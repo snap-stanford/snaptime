@@ -50,4 +50,7 @@ TTimeCollection LoadQuery(std::string InputFile);
 std::vector<std::vector<double> > InflateQuery(SnapTimeConfiguration config, TTimeCollection r,
 	std::string initTS, int duration, int granularity);
 
+// Perform Summary stats
+void PerformSummaryStats(SnapTimeConfiguration config, std::string output_file);
+
 #endif //SNAPTIME_H

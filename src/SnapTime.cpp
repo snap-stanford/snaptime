@@ -66,3 +66,10 @@ std::vector<std::vector<double> > InflateQuery(SnapTimeConfiguration config, TTi
 	SymDirMaker.InflateData(r, TStr(initTS.c_str()), duration, granularity, result);
 	return result;
 }
+
+void PerformSummaryStats(SnapTimeConfiguration config, std::string output_file) {
+	TStr RawDir = TStr(config.PrimaryDirectory.c_str());
+	TStr SchemaFile = TStr(config.SchemaFile.c_str());
+	TStr OutputFile = TStr(output_file.c_str());
+	summary::SummaryStats(RawDir, SchemaFile, OutputFile);
+}

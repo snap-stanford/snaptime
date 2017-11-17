@@ -60,6 +60,9 @@ public:
   //long long.
   TTime ConvertTime(const TStr & time_val) const;
 
+  // Convert a TTime back to the time formatted string
+  TStr ConvertTimeToStr(TTime t) const;
+
   TType GetType(const TStrV & IdVec);
 
 private:

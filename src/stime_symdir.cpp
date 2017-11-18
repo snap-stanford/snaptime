@@ -198,3 +198,46 @@ void TSTimeSymDir::CreateSymDirsForEventFile(TStr & EventFileName) {
 	free(real_event_path);
 	AssertR(success != -1, "Failed to create symbolic directory");
 }
+
+void GetEventFileList(TStr & Dir, TStrV & Files) {
+	if(!TDir::Exists(Dir)) {
+                Files.Add(Dir);
+         } else {
+                TStrV FnV;
+                TTimeFFile::GetAllFiles(Dir, FnV); // get the directories
+                for (int i=0; i<FnV.Len(); i++) {
+                       GetEventFileList(FnV[i], Files);
+                 }
+         }
+}
+        void SummaryStats(TStr & RawDir, TStr & SchemaFile, TStr & OutputFile) {
+                TSchema Schema(SchemaFile);
+                TStrV EventFileList;
+                GetEventFileList(RawDir, EventFileList);
+                TVec<TStrV> rows;
+                for (int i = 0; i<EventFileList.Len(); i++) {
+                        TFIn inputstream(EventFileList[i]);
+                        TPt<TSTime> t = TSTime::LoadSTime(inputstream, true);
+                        TStrV row = t->KeyIds;
+                        TInt length = t->Len();
+                        TTime t_zero = t->DirectAccessTime(0);
+                        TTime t_last = t->DirectAccessTime(length-1);
+                        TStr t_zero_str = Schema.ConvertTimeToStr(t_zero);
+                        TStr t_last_str = Schema.ConvertTimeToStr(t_last);
+                        row.Add(t_zero_str); // start time
+                        row.Add(t_last_str); // end time
+                        row.Add(length.GetStr()); // number of values
+                        rows.Add(row);
+                }
+                rows.Sort();
+                TFOut outstream(OutputFile);
+
+                for (int i = 0; i<rows.Len(); i++) {
+                        for (int j=0; j<rows[i].Len(); j++) {
+                                outstream.PutStr(rows[i][j]);
+                                outstream.PutCh(',');
+                        }
+                        outstream.PutLn();
+                }
+                // Go through each ID
+          }

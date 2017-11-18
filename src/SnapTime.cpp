@@ -71,5 +71,5 @@ void PerformSummaryStats(SnapTimeConfiguration config, std::string output_file) 
 	TStr RawDir = TStr(config.PrimaryDirectory.c_str());
 	TStr SchemaFile = TStr(config.SchemaFile.c_str());
 	TStr OutputFile = TStr(output_file.c_str());
-	summary::SummaryStats(RawDir, SchemaFile, OutputFile);
+	SummaryStats(RawDir, SchemaFile, OutputFile);
 }

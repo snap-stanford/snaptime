@@ -46,6 +46,7 @@ public:
 
   TBool IsTimeStr; // true if the time needs to be formatted (ie not a long)
   TStr TimeFormatter; // the format string to convert the time into a tm
+  char TimeMilliSecDelim; // Either ":" or ".", delimiter for milliseconds. '\0' if no milliseconds
   TBool HasTime; //time column is specified
 
 public:
@@ -66,6 +67,8 @@ public:
   TType GetType(const TStrV & IdVec);
 
 private:
+  void AdjustTimeFormatters();  
+
   // Read the given schema file and update the TSchema fields as according
   // to the given schema format
   void ReadSchemaFile(const TStr & filename);

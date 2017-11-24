@@ -1,5 +1,5 @@
 #include "stime_schema.hpp"
-
+#include "stime.hpp"
 const char * const FILE_HIERARCHY_HDR = "START FileHierarchy";
 const char * const SCHEMA_HDR = "START Schema";
 const char * const TYPES_HDR = "START SchemaTypes";
@@ -30,6 +30,22 @@ void TSchema::ReadSchemaFile(const TStr & filename) {
   }
   AssertR(has_time, "Data points must set time to be valid");
   AssertR(completed_sections[1], "must have a data section");
+  AdjustTimeFormatters();
+}
+
+void TSchema::AdjustTimeFormatters() {
+	if (!IsTimeStr) return;
+        char formatDelim = '\0';
+        if (TimeFormatter.EndsWith(".\%f")) {
+          formatDelim = '.';
+        } else if (TimeFormatter.EndsWith(":\%f")) {
+          formatDelim = ':';
+        } else {return;}
+        TStr leftFormatter;
+        TStr rightFormatter;
+        TimeFormatter.SplitOnLastCh(leftFormatter, formatDelim, rightFormatter);
+        TimeFormatter = leftFormatter;
+        TimeMilliSecDelim = formatDelim;
 }
 
 bool TSchema::GetNextUncommentedLine(TFIn & instream, TStr & result) {
@@ -203,19 +219,36 @@ void TSchema::ReadTimeConversion(TFIn & instream) {
 
 // Schema getter and transform methods
 TTime TSchema::ConvertTime(const TStr & time_val) const {
-  if ( !IsTimeStr) return time_val.GetUInt64();
+  if ( !IsTimeStr) return GetLFlt(time_val);
+  TStr secondsString  = "";
+  TLFlt millisecondPart = 0;
+  if (TimeMilliSecDelim != '\0') {
+    TStr millisecStr = "";
+    time_val.SplitOnLastCh(secondsString, TimeMilliSecDelim,millisecStr);
+    millisecStr = TStr("0.") + millisecStr;
+    millisecondPart = GetLFlt(millisecStr); 
+  } else {
+    secondsString = time_val;
+  }
   struct tm ts;
   memset(&ts, 0,  sizeof(ts));
-  AssertR(strptime(time_val.CStr(), TimeFormatter.CStr(), &ts) != NULL, "invalid time formatter");
+  AssertR(strptime(secondsString.CStr(), TimeFormatter.CStr(), &ts) != NULL, "invalid time formatter");
   time_t t = mktime(&ts);
-  return (TTime) t;
+  long double t_d = t;
+  TTime finalTime = millisecondPart + TLFlt(t_d);
+  return finalTime;
 }
 
 TStr TSchema::ConvertTimeToStr(TTime t) const {
-  if (!IsTimeStr) return t.GetStr();
+  if (!IsTimeStr) return TLFlt::GetStr(t);
+  time_t seconds = t.Val;
   char buf[30];
-  time_t ttime = time_t(t);
-  strftime(buf, 30, TimeFormatter.CStr(), localtime(&ttime));
+  strftime(buf, 30, TimeFormatter.CStr(), localtime(&seconds));
+  if (TimeMilliSecDelim != '\0') {
+    long double millisec = t.Val - seconds;
+    TStr millisecStr = millisec == 0 ? "0" : TLFlt::GetStr(millisec).RightOfLast('.');
+    return TStr(buf) + TStr(TimeMilliSecDelim) + millisecStr;
+  }
   return TStr(buf);
 }
 

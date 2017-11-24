@@ -3,6 +3,7 @@
 
 #include "stime_protos.hpp"
 
+TLFlt GetLFlt(const TStr & s); // convert a string to a LFlt
 
 // Intermediary framework unit. Identifiable by a list of IDs (who's ordering)
 // is defined by a global schema) and a TVec of time to value pairs,
@@ -74,8 +75,8 @@ public:
 
 	// Typed getters
 	TBool GetBool(int i);
-	TFlt GetFloat(int i);
-	TInt GetInt(int i);
+	TLFlt GetFloat(int i);
+	TInt64 GetInt(int i);
 	TStr GetStr(int i);
 };
 
@@ -166,8 +167,8 @@ public:
 	TType GetType(int rowNum) {return TimeCollection[rowNum]->Type;}
 	TTime GetTime(int rowNum, int elemNum) {return TimeCollection[rowNum]->DirectAccessTime(elemNum);}
         TBool GetBool(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetBool(elemNum);}
-	TFlt GetFloat(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetFloat(elemNum);}
-	TInt GetInt(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetInt(elemNum);}
+	TLFlt GetFloat(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetFloat(elemNum);}
+	TInt64 GetInt(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetInt(elemNum);}
 	TStr GetStr(int rowNum, int elemNum) {return TimeCollection[rowNum]->GetStr(elemNum);}
 	int GetSTimeLen(int rowNum) {return TimeCollection[rowNum]->Len();}
 

@@ -47,8 +47,8 @@ TTimeCollection Query(SnapTimeConfiguration config, QueryObject & Query, std::st
 TTimeCollection LoadQuery(std::string InputFile);
 
 // Inflate a query into a double vector of doubles
-std::vector<std::vector<long double> > InflateQuery(SnapTimeConfiguration config, TTimeCollection r,
-	std::string initTS, long double duration, long double granularity);
+std::vector<std::vector<TLFlt> > InflateQuery(SnapTimeConfiguration config, TTimeCollection r,
+	std::string initTS, TLFlt duration, TLFlt granularity);
 
 // Perform Summary stats
 void PerformSummaryStats(SnapTimeConfiguration config, std::string output_file);

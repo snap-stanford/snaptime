@@ -1,12 +1,12 @@
 /* for now these all get converted to floats. this should change eventually */
 #include <limits.h>
 #include <stdlib.h>
-void TSTimeSymDir::InflateData(TTimeCollection & r, TStr initialTs, long double duration, long double granularity, std::vector<std::vector<long double> > & result) {
+void TSTimeSymDir::InflateData(TTimeCollection & r, TStr initialTs, TLFlt duration, TLFlt granularity, std::vector<std::vector<TLFlt> > & result) {
 	TTime initialTimestamp = Schema.ConvertTime(initialTs);
 	int indices[r.Len()];
 	int size = duration/granularity;
 	for (int i=0; i< r.Len(); i++) {
-		std::vector<long double> empty_row (size);
+		std::vector<TLFlt> empty_row (size);
 		result.push_back(empty_row);
 		indices[i] = 0;
 	}
@@ -16,7 +16,7 @@ void TSTimeSymDir::InflateData(TTimeCollection & r, TStr initialTs, long double 
  			TPt<TSTime> & data_ptr = r.TimeCollection[j];
  			int new_index = AdvanceIndex(data_ptr, ts, indices[j]);
  			indices[j] = new_index;
- 			result[j][i] = data_ptr->GetFloat(new_index).Val;
+ 			result[j][i] = data_ptr->GetFloat(new_index);
  		}
  	}
 }

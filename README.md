@@ -7,7 +7,7 @@ In the same directory:
     ```git clone https://github.com/snap-stanford/snap-dev-64.git```
 - clone the snap-python-64 repository
     ```git clone https://github.com/snap-stanford/snap-python-64```
-- compile the snap-python SWIG
+- compile the snap-python-64 SWIG. Note, you must have at least swig version 3.0 (check with swig -version)
     ```
     cd snap-python-64
     make swig

@@ -54,10 +54,10 @@ TTimeCollection LoadQuery(std::string InputFile) {
 }
 
 // Only for doubles
-std::vector<std::vector<TLFlt> > InflateQuery(SnapTimeConfiguration config, TTimeCollection r,
-	std::string initTS, TLFlt duration, TLFlt granularity) {
+std::vector<std::vector<double> > InflateQuery(SnapTimeConfiguration config, TTimeCollection r,
+	std::string initTS, double duration, double granularity) {
 	
-	std::vector<std::vector<TLFlt> >  result;
+	std::vector<std::vector<double> >  result;
 	TStrV QuerySplit;
 	for (std::string split : config.SymbolicSplit) {
 		QuerySplit.Add(TStr(split.c_str()));

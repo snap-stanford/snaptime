@@ -2,7 +2,7 @@
 #define STIME_PROTOS_H
 
 // Time and data
-typedef TLFlt TTime; // time value
+typedef TFlt TTime; // time value
 enum TType {BOOLEAN, STRING, INTEGER, FLOAT}; // Types of values
 typedef TPair<TTime, TStr> TRawData; // pair of time to raw data
 enum TKeyType {TIME, SENSOR, ID, NO_ID}; // Column behavior types

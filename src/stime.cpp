@@ -1,17 +1,5 @@
 #include "stime.hpp"
 
-// Remove this when snap-64 implements GetLFlt
-TLFlt GetLFlt(const TStr & s) {
-  try {
-    long double _Val=std::stold(std::string(s.CStr()));
-    return TLFlt(_Val);
-  } catch(...) {
-    std::cout << s.CStr() << std::endl;
-    AssertR(false,"not a valid double");
-  }
-  return TLFlt(-1);
-}
-
 TPt<TSTime> TSTime::TypedTimeGenerator(TType type, TStrV& key_ids) {
 	switch(type) {
 		case BOOLEAN: {
@@ -26,7 +14,7 @@ TPt<TSTime> TSTime::TypedTimeGenerator(TType type, TStrV& key_ids) {
 			});
 			 return TPt<TSTime> (ptr);
 		} default:{
-			 auto ptr = new TSTypedTime<TLFlt>(type, key_ids, [] (TStr & s) { return GetLFlt(s);});
+			 auto ptr = new TSTypedTime<TFlt>(type, key_ids, [] (TStr & s) { return s.GetFlt();});
 			 return TPt<TSTime> (ptr);
 		}
 	}
@@ -36,19 +24,19 @@ TBool TSTime::GetBool(int i) {
 	void* ptr = DirectAccessValue(i);
 	switch(Type) {
 		case BOOLEAN: {return *(TBool*) ptr;}
-		case FLOAT: {return TBool(*(TLFlt*)ptr != TLFlt(0));}
+		case FLOAT: {return TBool(*(TFlt*)ptr != TFlt(0));}
 		case INTEGER: {return TBool(*(TInt64*)ptr != TInt64(0));}
 		default:{ AssertR(false, "cannot convert string to boolean");} // cannot convert string
 	}
 	return false;
 }
 
-TLFlt TSTime::GetFloat(int i) {
+TFlt TSTime::GetFloat(int i) {
 	void* ptr = DirectAccessValue(i);
 	switch(Type) {
-		case BOOLEAN: {return TLFlt(((TBool*) ptr)->Val);}
-		case FLOAT: {return *(TLFlt*)ptr;}
-		case INTEGER: {return TLFlt(((TInt64*)ptr)->Val);}
+		case BOOLEAN: {return TFlt(((TBool*) ptr)->Val);}
+		case FLOAT: {return *(TFlt*)ptr;}
+		case INTEGER: {return TFlt(((TInt64*)ptr)->Val);}
 		default:{ AssertR(false, "cannot convert string to float");} // cannot convert string
 	}
 	return 0;
@@ -59,7 +47,7 @@ TInt64 TSTime::GetInt(int i) {
 	switch(Type) {
 		case BOOLEAN: {return TInt64(((TBool*) ptr)->Val);}
 		case FLOAT: {
-			long double val = ((TLFlt*) ptr)->Val;
+			double val = ((TFlt*) ptr)->Val;
 			return TInt64(int64(floor(val+0.5)));}
 		case INTEGER: {return *(TInt64*)ptr;}
 		default:{ AssertR(false, "cannot convert string to integer");} // cannot convert string
@@ -73,8 +61,7 @@ TStr TSTime::GetStr(int i) {
 		case BOOLEAN: {
 			return TBool::GetStr(*(TBool*)ptr);};
 		case FLOAT: {
-			long double val = ((TLFlt*)ptr)->Val;
-			return TLFlt::GetStr(val);}
+			return TFlt::GetStr(*(TFlt*)ptr);}
 		case INTEGER: {return ((TInt64*)ptr)->GetStr();}
 		default:{ return *(TStr*)ptr;}
 	}

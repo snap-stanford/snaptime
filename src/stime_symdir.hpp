@@ -33,7 +33,7 @@ public:
 
 public:
 	void QueryFileSys(TVec<FileQuery> Query, TTimeCollection & r, TStr & InitialTimeStamp, TStr & FinalTimeStamp, TStr OutputDir);
-	void InflateData(TTimeCollection & r, TStr initialTimestamp, TLFlt duration, TLFlt granularity, std::vector<std::vector<TLFlt> > & result);
+	void InflateData(TTimeCollection & r, TStr initialTimestamp, double duration, double granularity, std::vector<std::vector<double> > & result);
 private:
 	void TraverseEventFiles(TStr& Dir);
 	void CreateSymDirsForEventFile(TStr & EventFileName); // TODO, be able to do this for time split

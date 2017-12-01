@@ -219,14 +219,14 @@ void TSchema::ReadTimeConversion(TFIn & instream) {
 
 // Schema getter and transform methods
 TTime TSchema::ConvertTime(const TStr & time_val) const {
-  if ( !IsTimeStr) return GetLFlt(time_val);
+  if ( !IsTimeStr) return time_val.GetFlt();
   TStr secondsString  = "";
-  TLFlt millisecondPart = 0;
+  TFlt millisecondPart = 0;
   if (TimeMilliSecDelim != '\0') {
     TStr millisecStr = "";
     time_val.SplitOnLastCh(secondsString, TimeMilliSecDelim,millisecStr);
     millisecStr = TStr("0.") + millisecStr;
-    millisecondPart = GetLFlt(millisecStr); 
+    millisecondPart = time_val.GetFlt(); 
   } else {
     secondsString = time_val;
   }
@@ -234,19 +234,19 @@ TTime TSchema::ConvertTime(const TStr & time_val) const {
   memset(&ts, 0,  sizeof(ts));
   AssertR(strptime(secondsString.CStr(), TimeFormatter.CStr(), &ts) != NULL, "invalid time formatter");
   time_t t = mktime(&ts);
-  long double t_d = t;
-  TTime finalTime = millisecondPart + TLFlt(t_d);
+  double t_d = t;
+  TTime finalTime = millisecondPart + TFlt(t_d);
   return finalTime;
 }
 
 TStr TSchema::ConvertTimeToStr(TTime t) const {
-  if (!IsTimeStr) return TLFlt::GetStr(t);
+  if (!IsTimeStr) return TFlt::GetStr(t);
   time_t seconds = t.Val;
   char buf[30];
   strftime(buf, 30, TimeFormatter.CStr(), localtime(&seconds));
   if (TimeMilliSecDelim != '\0') {
-    long double millisec = t.Val - seconds;
-    TStr millisecStr = millisec == 0 ? "0" : TLFlt::GetStr(millisec).RightOfLast('.');
+    double millisec = t.Val - seconds;
+    TStr millisecStr = millisec == 0 ? "0" : TFlt::GetStr(millisec).RightOfLast('.');
     return TStr(buf) + TStr(TimeMilliSecDelim) + millisecStr;
   }
   return TStr(buf);

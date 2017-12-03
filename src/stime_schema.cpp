@@ -226,7 +226,7 @@ TTime TSchema::ConvertTime(const TStr & time_val) const {
     TStr millisecStr = "";
     time_val.SplitOnLastCh(secondsString, TimeMilliSecDelim,millisecStr);
     millisecStr = TStr("0.") + millisecStr;
-    millisecondPart = time_val.GetFlt(); 
+    millisecondPart = millisecStr.GetFlt(); 
   } else {
     secondsString = time_val;
   }

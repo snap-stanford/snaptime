@@ -131,25 +131,27 @@ private:
 	// Find the index of the largest value with timestamp < t
 	// If all values in TimeData are > timestamp, then return 0
 	int GetFirstValueWithTime(TTime t) {
-		// TODO, do this with Binary Search
-		int index = 0;
-		for (int i=0; i<TimeData.Len(); i++) {
-			if (TimeData[i].Val1 > t) return index;
-			index = i;
+		int l = 0;
+		int r = TimeData.Len() -1;
+		while(l<r) {
+			int m = (l+r+1)/2;
+			if (TimeData[m].Val1 <= t) {l = m;}
+			else {r = m-1;}
 		}
-		return index;
+		return l;
 	}
 
 	// Find the index of the smallest value with timestamp > t
 	// If all values in TimeData are < t, return index of the last element
 	int GetLastValueWithTime(TTime t) {
-		// TODO, do this with Binary Search
-		int index = TimeData.Len()-1;
-		for (int i=TimeData.Len()-1; i>0; i--) {
-			if (TimeData[i].Val1 < t) return index;
-			index = i;
+		int l = 0;
+		int r = TimeData.Len()-1;
+		while (l<r) {
+			int m = (l+r)/2;
+			if (TimeData[i].Val1 < t) {l = m+1;}
+			else {r = m;}
 		}
-		return index;
+		return l
 	}
 };
 

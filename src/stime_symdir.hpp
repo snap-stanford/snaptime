@@ -5,7 +5,7 @@
 
 struct FileQuery {
 	TStr QueryName; //name of ID
-	TStr QueryVal; //empty string if any value
+	TStrV QueryVals; //empty vector if any value
 };
 
 /*

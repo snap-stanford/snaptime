@@ -35,9 +35,13 @@ TTimeCollection Query(SnapTimeConfiguration config, QueryObject & Query, std::st
 	}
 	TSTimeSymDir SymDirMaker(TStr(config.PrimaryDirectory.c_str()), TStr(config.SymbolicDirectory.c_str()), QuerySplit, TStr(config.SchemaFile.c_str()));
 
-	TVec<FileQuery> FileQueries;
+	TVec<FileQuery> FileQueries; // FileQuery: {QueryName, {QueryVals}}
 	for (auto QueryValue : Query.Queries) {
-		FileQueries.Add({TStr(QueryValue.first.c_str()), TStr(QueryValue.second.c_str())});
+		TStrV vec;
+		for (auto v : QueryValue.second) {
+			vec.Add(TStr(v.c_str()));
+		}
+		FileQueries.Add({TStr(QueryValue.first.c_str()), vec});
 	}
 	TStr initTS(Query.InitialTimestamp.c_str());
 	TStr finTS(Query.FinalTimestamp.c_str());

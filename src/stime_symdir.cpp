@@ -71,7 +71,7 @@ void TSTimeSymDir::QueryFileSys(TVec<FileQuery> Query, TTimeCollection & r, TStr
 		} else {
 			// this is empty, so we set it as an empty string
 			SymDirQueries[i].QueryName = dir_name;
-			SymDirQueries[i].QueryVal = TStr("");
+			SymDirQueries[i].QueryVal = TStrV();
 		}
 	}	
 	// retrieve the data and put into an executable
@@ -91,11 +91,15 @@ void TSTimeSymDir::UnravelQuery(TVec<FileQuery> & SymDirQueries, int SymDirQuery
 		GatherQueryResult(Dir, ExtraQueries, r, InitialTimeStamp, FinalTimeStamp);
 		return;
 	}
-	if (SymDirQueries[SymDirQueryIndex].QueryVal != TStr("")) {
+	if (SymDirQueries[SymDirQueryIndex].QueryVal.Len() != 0) {
 		// if this directory has a query value, go to that folder
-		TStr path = Dir + TStr("/") + TTimeFFile::EscapeFileName(SymDirQueries[SymDirQueryIndex].QueryVal);
-		AssertR(TDir::Exists(path), "Query does not exist in symbolic dir");
-		UnravelQuery(SymDirQueries, SymDirQueryIndex+1, path, ExtraQueries, r, InitialTimeStamp, FinalTimeStamp);
+		for (int i=0; i<SymDirQueries[SymDirQueryIndex].QueryVal.Len(); i++) {
+			TStr val = SymDirQueries[SymDirQueryIndex].QueryVal[i];
+			TStr path = Dir + TStr("/") + TTimeFFile::EscapeFileName(val);
+			if (TDir::Exists(path)) {
+				UnravelQuery(SymDirQueries, SymDirQueryIndex+1, path, ExtraQueries, r, InitialTimeStamp, FinalTimeStamp);
+			}
+		}
 	} else {
 		// this directory doesn't have a query value, so queue up gathering in all subfolders
 		TStrV FnV;
@@ -128,18 +132,18 @@ void TSTimeSymDir::GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & Extr
 		bool validQuery = true;
 	    for (it = ExtraQueries.BegI(); it != ExtraQueries.EndI(); it++) {
 	        TStr QueryName = it.GetKey();
-	        TStr QueryVal = it.GetDat().QueryVal;
-	        AssertR(Schema.KeyNamesToIndex.IsKey(QueryName), "Invalid query");
+	        TStrV QueryVal = it.GetDat().QueryVal;
+	        AssertR(Schema.KeyNamesToIndex.IsKey(QueryName), "Invalid query"); // QueryName needs to exist
 	        TInt IdIndex = Schema.KeyNamesToIndex.GetDat(QueryName);
-	        if (t->KeyIds[IdIndex] != QueryVal) {
-			validQuery = false;
-			break; // does not match query
-		}
+	        if (!QueryVal.IsIn(t->KeyIds[IdIndex])) {
+				validQuery = false;
+				break; // does not match query
+			}
 	    }
 	    if (validQuery) {
 	    	t->LoadData(inputstream);
-	    	t->TruncateVectorByTime(initTS, finalTS);
-		r.Add(t);
+	    	t->TruncateVectorByTime(initTS, finalTS); // todo make query faster, make multiple ts
+			r.Add(t);
 	    }
 	}
 }

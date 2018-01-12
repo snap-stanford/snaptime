@@ -29,8 +29,7 @@ struct SnapTimeConfiguration {
 };
 
 struct QueryObject {
-	std::vector<std::string, std::vector<std::string> > Queries; // IDName, {ValueName}
-	std::vector<std::pair<std::string, std::string> > Queries; // IDName, ValueName
+        std::vector<std::pair<std::string, std::vector<std::string> > > Queries; //IDName {ValueName}
 	std::string InitialTimestamp; // in same format as the schema, "" to ignore
 	std::string FinalTimestamp; // in same format as schema, "" to ignore
 };

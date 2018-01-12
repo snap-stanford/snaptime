@@ -148,10 +148,10 @@ private:
 		int r = TimeData.Len()-1;
 		while (l<r) {
 			int m = (l+r)/2;
-			if (TimeData[i].Val1 < t) {l = m+1;}
+			if (TimeData[m].Val1 < t) {l = m+1;}
 			else {r = m;}
 		}
-		return l
+		return l;
 	}
 };
 

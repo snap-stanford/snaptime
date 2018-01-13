@@ -19,3 +19,4 @@
 %template(StringPairVector) std::vector<std::pair<std::string, std::string> >;
 %template(DoubleVector) std::vector<double>;
 %template(VectorVectorDouble) std::vector<std::vector<double> >;
+%template(StringVectorVector) std::vector<std::pair<std::string, std::vector<std::string> > >;

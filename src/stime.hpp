@@ -127,7 +127,7 @@ public:
 		TimeData.GetSubValV(firstIndex, lastIndex, TimeDataTrunc);
 		TimeData = TimeDataTrunc;
 	}
-private:
+
 	// Find the index of the largest value with timestamp < t
 	// If all values in TimeData are > timestamp, then return 0
 	int GetFirstValueWithTime(TTime t) {

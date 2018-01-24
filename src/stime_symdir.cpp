@@ -10,15 +10,36 @@ void TSTimeSymDir::InflateData(TTimeCollection & r, TStr initialTs, double durat
 		result.push_back(empty_row);
 		indices[i] = 0;
 	}
-	for (int i=0; i < size; i++) { // for each timestamp
-		TTime ts = initialTimestamp + i*granularity;
-		for (int j=0; j<r.Len(); j++) { // for each result
- 			TPt<TSTime> & data_ptr = r.TimeCollection[j];
- 			int new_index = AdvanceIndex(data_ptr, ts, indices[j]);
- 			indices[j] = new_index;
- 			result[j][i] = data_ptr->GetFloat(new_index);
- 		}
- 	}
+
+	for (int i=0; i<r.Len(); i++) {// for each result
+		TPt<TSTime> & data_ptr = r.TimeCollection[i];
+		int data_length = data_ptr->Len();
+		int index = r->GetFirstValueWithTime(initialTimestamp); // find initial index
+		double val = data_ptr->GetFloat(index); // first value
+		for (int j=0; j<size; j++) {// for each time stamp
+			TTime ts = initialTimestamp + i*granularity;
+			int new_index;
+			if (index >= data_ptr->Len() - 1) {
+				new_index = index; // at the end of the vector
+			} else {
+				new_index = AdvanceIndex(data_ptr, ts, index); // find the next index
+			}
+			if (new_index != index) { // this is a new value
+				index = new_index;
+				val = data_ptr->GetFloat(index);
+			}
+			result[i][j] = val;
+		}
+	}
+	// for (int i=0; i < size; i++) { // for each timestamp
+	// 	TTime ts = initialTimestamp + i*granularity;
+	// 	for (int j=0; j<r.Len(); j++) { // for each result
+ 	// 		TPt<TSTime> & data_ptr = r.TimeCollection[j];
+ 	// 		int new_index = AdvanceIndex(data_ptr, ts, indices[j]);
+ 	// 		indices[j] = new_index;
+ 	// 		result[j][i] = data_ptr->GetFloat(new_index);
+ 	// 	}
+ 	// }
 }
 
 int TSTimeSymDir::AdvanceIndex(TPt<TSTime> data_ptr, TTime time_stamp, int curr_index) {

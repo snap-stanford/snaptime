@@ -140,7 +140,7 @@ void TSTimeSymDir::GatherQueryResult(TStr FileDir, THash<TStr, FileQuery> & Extr
 	}
 	TTime finalTS = TTime::Mx;
 	if (FinalTimeStamp.Len() != 0) {
-		initTS = Schema.ConvertTime(FinalTimeStamp);
+		finalTS = Schema.ConvertTime(FinalTimeStamp);
 	}
 
 	TStrV FnV;

@@ -71,6 +71,10 @@ public:
 	virtual TInt Len() = 0;
 	// truncate the vector to be bounded by firstTime and lastTimes
 	virtual void TruncateVectorByTime(TTime firstTime, TTime lastTime) = 0;
+	//Find the index of the largest value with timestamp < t
+	virtual int GetFirstValueWithTime(TTime t) = 0;
+	//Find the index of the smallest value with timestamp > t
+	virtual int GetLastValueWithTime(TTime t) = 0;
 
 	// Typed getters
 	TBool GetBool(int i);

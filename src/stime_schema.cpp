@@ -243,7 +243,13 @@ TStr TSchema::ConvertTimeToStr(TTime t) const {
   if (!IsTimeStr) return TFlt::GetStr(t);
   time_t seconds = t.Val;
   char buf[30];
-  strftime(buf, 30, TimeFormatter.CStr(), localtime(&seconds));
+  struct tm* timeinfo = localtime(&seconds);
+  if (timeinfo->tm_isdst) {
+	seconds = seconds - 3600;
+	timeinfo = localtime(&seconds);
+  }
+  //timeinfo->tm_isdst = 0; // deals with daylight savings time
+  strftime(buf, 30, TimeFormatter.CStr(), timeinfo);
   if (TimeMilliSecDelim != '\0') {
     double millisec = t.Val - seconds;
     TStr millisecStr = millisec == 0 ? "0" : TFlt::GetStr(millisec).RightOfLast('.');

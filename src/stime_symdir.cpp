@@ -3,27 +3,21 @@
 #include <stdlib.h>
 void TSTimeSymDir::InflateData(TTimeCollection & r, TStr initialTs, double duration, double granularity, std::vector<std::vector<double> > & result) {
 	TTime initialTimestamp = Schema.ConvertTime(initialTs);
-	std::cout << "timestamp " << Schema.ConvertTimeToStr(initialTimestamp).CStr() <<","<<initialTs.CStr() << std::endl;
-	int indices[r.Len()];
 	int size = duration/granularity;
 	for (int i=0; i< r.Len(); i++) {
 		std::vector<double> empty_row (size);
 		result.push_back(empty_row);
-		indices[i] = 0;
 	}
 
 	for (int i=0; i<r.Len(); i++) {// for each result
 		TPt<TSTime> & data_ptr = r.TimeCollection[i];
 		int data_length = data_ptr->Len();
 		int index = data_ptr->GetFirstValueWithTime(initialTimestamp); // find initial index
-		std::cout<<"initial index "<< index <<std::endl;
 		double val = data_ptr->GetFloat(index); // first value
 		for (int j=0; j<size; j++) {// for each time stamp
 			TTime ts = initialTimestamp + j*granularity;
-			std::cout << "diff " << j*granularity << std::endl;
 			int new_index;
 			if (index >= data_length - 1) {
-				std::cout << "at end of vector" << std::endl;
 				new_index = index; // at the end of the vector
 			} else {
 				new_index = AdvanceIndex(data_ptr, ts, index); // find the next index
@@ -32,23 +26,12 @@ void TSTimeSymDir::InflateData(TTimeCollection & r, TStr initialTs, double durat
 				index = new_index;
 				val = data_ptr->GetFloat(index);
 			}
-			std::cout<<"index "<< index << std::endl;
 			result[i][j] = val;
 		}
 	}
-	// for (int i=0; i < size; i++) { // for each timestamp
-	// 	TTime ts = initialTimestamp + i*granularity;
-	// 	for (int j=0; j<r.Len(); j++) { // for each result
- 	// 		TPt<TSTime> & data_ptr = r.TimeCollection[j];
- 	// 		int new_index = AdvanceIndex(data_ptr, ts, indices[j]);
- 	// 		indices[j] = new_index;
- 	// 		result[j][i] = data_ptr->GetFloat(new_index);
- 	// 	}
- 	// }
 }
 
 int TSTimeSymDir::AdvanceIndex(TPt<TSTime> data_ptr, TTime time_stamp, int curr_index) {
-	std::cout << "trying to advance" << std::endl;
 	if (curr_index >= data_ptr->Len() - 1) {
 		// at end of vector so keep index the same
 		return curr_index;
@@ -56,7 +39,6 @@ int TSTimeSymDir::AdvanceIndex(TPt<TSTime> data_ptr, TTime time_stamp, int curr_
 	int index_after;
 	for (index_after = curr_index+1; index_after < data_ptr->Len(); index_after++) {
 		TTime next_ts = data_ptr->DirectAccessTime(index_after);
-		std::cout << "advance diff " << next_ts-time_stamp << std::endl;
 		if (next_ts > time_stamp) {
 			// we hit the end of the window, so break out
 			return index_after -1;

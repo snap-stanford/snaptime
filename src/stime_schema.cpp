@@ -1,31 +1,34 @@
 #include "stime_schema.hpp"
 #include "stime.hpp"
-const char * const FILE_HIERARCHY_HDR = "START FileHierarchy";
-const char * const SCHEMA_HDR = "START Schema";
-const char * const TYPES_HDR = "START SchemaTypes";
-const char * const TIME_CONVERT_HDR = "START TimeConvert";
+const char *const FILE_HIERARCHY_HDR = "START FileHierarchy";
+const char *const SCHEMA_HDR = "START Schema";
+const char *const TYPES_HDR = "START SchemaTypes";
+const char *const TIME_CONVERT_HDR = "START TimeConvert";
 
 // Reading Schema
-void TSchema::ReadSchemaFile(const TStr & filename) {
+void TSchema::ReadSchemaFile(const TStr &filename)
+{
   TFIn instream(filename);
   bool completed_sections[NUM_SCHEMA_SECTIONS];
   memset(completed_sections, 0, sizeof(completed_sections));
   SchemaCategory schema_category;
   bool has_time = false;
-  while(GetNextSchemaSection(instream, completed_sections, schema_category)) {
-    switch (schema_category) {
-      case FILE_HIERARCHY:
-        has_time |= ReadFileHierarchy(instream);
-        break;
-      case SCHEMA:
-        has_time |= ReadDataSchema(instream);
-        break;
-      case TYPES:
-        ReadTypes(instream);
-        break;
-      case TIME_CONVERT:
-        ReadTimeConversion(instream);
-        break;
+  while (GetNextSchemaSection(instream, completed_sections, schema_category))
+  {
+    switch (schema_category)
+    {
+    case FILE_HIERARCHY:
+      has_time |= ReadFileHierarchy(instream);
+      break;
+    case SCHEMA:
+      has_time |= ReadDataSchema(instream);
+      break;
+    case TYPES:
+      ReadTypes(instream);
+      break;
+    case TIME_CONVERT:
+      ReadTimeConversion(instream);
+      break;
     }
   }
   AssertR(has_time, "Data points must set time to be valid");
@@ -33,53 +36,77 @@ void TSchema::ReadSchemaFile(const TStr & filename) {
   AdjustTimeFormatters();
 }
 
-void TSchema::AdjustTimeFormatters() {
-	if (!IsTimeStr) return;
-        char formatDelim = '\0';
-        if (TimeFormatter.EndsWith(".\%f")) {
-          formatDelim = '.';
-        } else if (TimeFormatter.EndsWith(":\%f")) {
-          formatDelim = ':';
-        } else {return;}
-        TStr leftFormatter;
-        TStr rightFormatter;
-        TimeFormatter.SplitOnLastCh(leftFormatter, formatDelim, rightFormatter);
-        TimeFormatter = leftFormatter;
-        TimeMilliSecDelim = formatDelim;
+void TSchema::AdjustTimeFormatters()
+{
+  if (!IsTimeStr)
+    return;
+  char formatDelim = '\0';
+  if (TimeFormatter.EndsWith(".\%f"))
+  {
+    formatDelim = '.';
+  }
+  else if (TimeFormatter.EndsWith(":\%f"))
+  {
+    formatDelim = ':';
+  }
+  else
+  {
+    return;
+  }
+  TStr leftFormatter;
+  TStr rightFormatter;
+  TimeFormatter.SplitOnLastCh(leftFormatter, formatDelim, rightFormatter);
+  TimeFormatter = leftFormatter;
+  TimeMilliSecDelim = formatDelim;
 }
 
-bool TSchema::GetNextUncommentedLine(TFIn & instream, TStr & result) {
-  while(instream.GetNextLn(result)) {
-    if (result.Len() != 0 && !result.StartsWith("#")) return true;
+bool TSchema::GetNextUncommentedLine(TFIn &instream, TStr &result)
+{
+  while (instream.GetNextLn(result))
+  {
+    if (result.Len() != 0 && !result.StartsWith("#"))
+      return true;
   }
   return false;
 }
 
-bool TSchema::GetNextSchemaSection(TFIn & instream, bool* completed_sections, 
-  SchemaCategory & schema_category) {
+bool TSchema::GetNextSchemaSection(TFIn &instream, bool *completed_sections,
+                                   SchemaCategory &schema_category)
+{
   TStr section_hdr;
   SchemaCategory temp = FILE_HIERARCHY;
   int section_index = -1;
   // no more lines left
-  if (!GetNextUncommentedLine(instream, section_hdr)) return false;
+  if (!GetNextUncommentedLine(instream, section_hdr))
+    return false;
   section_hdr = section_hdr.GetTrunc(); // trim whitespace
-  if (section_hdr == TStr(FILE_HIERARCHY_HDR)) {
+  if (section_hdr == TStr(FILE_HIERARCHY_HDR))
+  {
     temp = FILE_HIERARCHY;
     section_index = 0;
-  } else if (section_hdr == TStr(SCHEMA_HDR)) {
+  }
+  else if (section_hdr == TStr(SCHEMA_HDR))
+  {
     temp = SCHEMA;
     section_index = 1;
-  } else if (section_hdr == TStr(TYPES_HDR)) {
+  }
+  else if (section_hdr == TStr(TYPES_HDR))
+  {
     AssertR(completed_sections[SCHEMA], "Schema section must be listed before the types section");
     temp = TYPES;
     section_index = 2;
-  } else if (section_hdr == TStr(TIME_CONVERT_HDR)) {
+  }
+  else if (section_hdr == TStr(TIME_CONVERT_HDR))
+  {
     temp = TIME_CONVERT;
     section_index = 3;
-  } else {
+  }
+  else
+  {
     AssertR(false, "Invalid start of schema section");
   }
-  if (completed_sections[section_index]) {
+  if (completed_sections[section_index])
+  {
     AssertR(false, "Schema header " + section_hdr + " has already been used");
   }
   completed_sections[section_index] = true;
@@ -87,15 +114,16 @@ bool TSchema::GetNextSchemaSection(TFIn & instream, bool* completed_sections,
   return true;
 }
 
-bool TSchema::GetSectionLine(TFIn & instream, TStr & line) {
+bool TSchema::GetSectionLine(TFIn &instream, TStr &line)
+{
   AssertR(GetNextUncommentedLine(instream, line),
-    "Schema section needs to end with END");
+          "Schema section needs to end with END");
   return line != TStr("END");
 }
 
-TInt TSchema::AddNewKeyName(const TStr & key_name) {
-  AssertR(!KeyNamesToIndex.IsKey(key_name), "key name "+ key_name
-          + " has already been used ");
+TInt TSchema::AddNewKeyName(const TStr &key_name)
+{
+  AssertR(!KeyNamesToIndex.IsKey(key_name), "key name " + key_name + " has already been used ");
   TInt index = KeyNames.Len();
   KeyNames.Add(key_name);
   KeyNamesToIndex.AddDat(key_name, index);
@@ -103,30 +131,39 @@ TInt TSchema::AddNewKeyName(const TStr & key_name) {
   return index;
 }
 
-bool TSchema::ReadFileHierarchy(TFIn & instream) {
+bool TSchema::ReadFileHierarchy(TFIn &instream)
+{
   bool has_time = false;
   TStr schema_line;
-  while (GetSectionLine(instream, schema_line)) {
+  while (GetSectionLine(instream, schema_line))
+  {
     // section is still active
-    if (schema_line.StartsWith("DELIM:")) {
+    if (schema_line.StartsWith("DELIM:"))
+    {
       FileDelimiter = schema_line.LastCh();
       continue;
-    } 
+    }
     TStrV directories;
     schema_line.SplitOnAllCh(',', directories);
-    for (int i=0; i<directories.Len(); i++) {
-      const TStr & directory = directories[i];
+    for (int i = 0; i < directories.Len(); i++)
+    {
+      const TStr &directory = directories[i];
       TStr dir_name = directory.GetTrunc();
       TInt index;
       TKeyType behavior;
-      if (dir_name == "NULL") {
+      if (dir_name == "NULL")
+      {
         index = -1;
         behavior = NO_ID;
-      } else if (dir_name == "TIME") {
+      }
+      else if (dir_name == "TIME")
+      {
         has_time = true;
         index = -1;
         behavior = TIME;
-      } else {
+      }
+      else
+      {
         behavior = ID;
         index = AddNewKeyName(dir_name);
       }
@@ -134,14 +171,17 @@ bool TSchema::ReadFileHierarchy(TFIn & instream) {
     }
   }
   // If there are no directories set, add null
-  if (Dirs.Empty()) Dirs.Add({NO_ID, -1});
+  if (Dirs.Empty())
+    Dirs.Add({NO_ID, -1});
   return has_time;
 }
 
-bool TSchema::ReadDataSchema(TFIn & instream) {
+bool TSchema::ReadDataSchema(TFIn &instream)
+{
   bool has_time = false;
   TStr schema_line;
-  while (GetSectionLine(instream, schema_line)) {
+  while (GetSectionLine(instream, schema_line))
+  {
     TStrV col;
     schema_line.SplitOnAllCh(',', col);
     AssertR(col.Len() == 2, "Schema section must have lines with 2 fields");
@@ -149,18 +189,25 @@ bool TSchema::ReadDataSchema(TFIn & instream) {
     TStr behavior = col[1].GetTrunc();
     TKeyType col_behavior;
     TInt col_index;
-    if (behavior == "TIME") {
+    if (behavior == "TIME")
+    {
       has_time = true;
       col_behavior = TIME;
       col_index = -1;
-    } else if (behavior == "ID") {
+    }
+    else if (behavior == "ID")
+    {
       col_behavior = ID;
       col_index = AddNewKeyName(name);
-    } else if (behavior == "SENSOR") {
+    }
+    else if (behavior == "SENSOR")
+    {
       col_behavior = SENSOR;
       col_index = SensorNames.Len();
       SensorNames.Add(name);
-    } else {
+    }
+    else
+    {
       AssertR(false, "invalid line in SCHEMA section");
     }
     Cols.Add({col_behavior, col_index});
@@ -170,36 +217,53 @@ bool TSchema::ReadDataSchema(TFIn & instream) {
   return has_time;
 }
 
-void TSchema::ReadTypes(TFIn & instream) {
+void TSchema::ReadTypes(TFIn &instream)
+{
   TStr schema_line;
-  while(GetSectionLine(instream, schema_line)) {
+  while (GetSectionLine(instream, schema_line))
+  {
     TStrV col;
     schema_line.SplitOnAllCh(',', col);
     AssertR(col.Len() >= 2, "Schema type section must have lines with 2 or 3 fields");
     TStr name = col[0].GetTrunc();
     TStr key_name, type;
-    if (name == "DEFAULT") {
+    if (name == "DEFAULT")
+    {
       type = col[1].GetTrunc();
-    } else {
+    }
+    else
+    {
       AssertR(col.Len() == 3, "Schema type specification must have line with 3 fields");
       key_name = col[1].GetTrunc();
       type = col[2].GetTrunc();
     }
     TType id_type;
-    if (type == "BOOLEAN") {
+    if (type == "BOOLEAN")
+    {
       id_type = BOOLEAN;
-    } else if (type == "INTEGER") {
+    }
+    else if (type == "INTEGER")
+    {
       id_type = INTEGER;
-    } else if (type == "FLOAT") {
+    }
+    else if (type == "FLOAT")
+    {
       id_type = FLOAT;
-    } else if (type == "STRING") {
+    }
+    else if (type == "STRING")
+    {
       id_type = STRING;
-    } else {
+    }
+    else
+    {
       AssertR(false, "undefined type " + type);
     }
-    if (name == "DEFAULT") {
+    if (name == "DEFAULT")
+    {
       DefaultType = id_type;
-    } else {
+    }
+    else
+    {
       AssertR(KeyNamesToIndex.IsKey(key_name), "undefined key name in type section");
       TInt index = KeyNamesToIndex.GetDat(key_name);
       TypeMaps[index].AddDat(name, id_type);
@@ -207,31 +271,37 @@ void TSchema::ReadTypes(TFIn & instream) {
   }
 }
 
-void TSchema::ReadTimeConversion(TFIn & instream) {
+void TSchema::ReadTimeConversion(TFIn &instream)
+{
   TStr schema_formatter;
-  AssertR(GetSectionLine(instream, schema_formatter), 
-    "time convert section must define a format string");
+  AssertR(GetSectionLine(instream, schema_formatter),
+          "time convert section must define a format string");
   IsTimeStr = true;
   TimeFormatter = schema_formatter;
   AssertR(!GetSectionLine(instream, schema_formatter),
-    "time converter needs to end with an END");
+          "time converter needs to end with an END");
 }
 
 // Schema getter and transform methods
-TTime TSchema::ConvertTime(const TStr & time_val) const {
-  if ( !IsTimeStr) return time_val.GetFlt();
-  TStr secondsString  = "";
+TTime TSchema::ConvertTime(const TStr &time_val) const
+{
+  if (!IsTimeStr)
+    return time_val.GetFlt();
+  TStr secondsString = "";
   TFlt millisecondPart = 0;
-  if (TimeMilliSecDelim != '\0') {
+  if (TimeMilliSecDelim != '\0')
+  {
     TStr millisecStr = "";
-    time_val.SplitOnLastCh(secondsString, TimeMilliSecDelim,millisecStr);
+    time_val.SplitOnLastCh(secondsString, TimeMilliSecDelim, millisecStr);
     millisecStr = TStr("0.") + millisecStr;
-    millisecondPart = millisecStr.GetFlt(); 
-  } else {
+    millisecondPart = millisecStr.GetFlt();
+  }
+  else
+  {
     secondsString = time_val;
   }
   struct tm ts;
-  memset(&ts, 0,  sizeof(ts));
+  memset(&ts, 0, sizeof(ts));
   AssertR(strptime(secondsString.CStr(), TimeFormatter.CStr(), &ts) != NULL, "invalid time formatter");
   time_t t = mktime(&ts);
   double t_d = t;
@@ -239,18 +309,22 @@ TTime TSchema::ConvertTime(const TStr & time_val) const {
   return finalTime;
 }
 
-TStr TSchema::ConvertTimeToStr(TTime t) const {
-  if (!IsTimeStr) return TFlt::GetStr(t);
+TStr TSchema::ConvertTimeToStr(TTime t) const
+{
+  if (!IsTimeStr)
+    return TFlt::GetStr(t);
   time_t seconds = t.Val;
   char buf[30];
-  struct tm* timeinfo = localtime(&seconds);
-  if (timeinfo->tm_isdst) {
-	seconds = seconds - 3600;
-	timeinfo = localtime(&seconds);
+  struct tm *timeinfo = localtime(&seconds);
+  if (timeinfo->tm_isdst)
+  {
+    seconds = seconds - 3600;
+    timeinfo = localtime(&seconds);
   }
   //timeinfo->tm_isdst = 0; // deals with daylight savings time
   strftime(buf, 30, TimeFormatter.CStr(), timeinfo);
-  if (TimeMilliSecDelim != '\0') {
+  if (TimeMilliSecDelim != '\0')
+  {
     double millisec = t.Val - seconds;
     TStr millisecStr = millisec == 0 ? "0" : TFlt::GetStr(millisec).RightOfLast('.');
     return TStr(buf) + TStr(TimeMilliSecDelim) + millisecStr;
@@ -258,12 +332,15 @@ TStr TSchema::ConvertTimeToStr(TTime t) const {
   return TStr(buf);
 }
 
-TType TSchema::GetType(const TStrV & IdVec) {
+TType TSchema::GetType(const TStrV &IdVec)
+{
   AssertR(IdVec.Len() == TypeMaps.Len(), "invalid ID vector");
   // start from back of type specifier looking for types
-  for (int i=TypeMaps.Len()-1; i>=0; i--) {
+  for (int i = TypeMaps.Len() - 1; i >= 0; i--)
+  {
     TStr IdName = IdVec[i];
-    if (TypeMaps[i].IsKey(IdName)) {
+    if (TypeMaps[i].IsKey(IdName))
+    {
       return TypeMaps[i].GetDat(IdName);
     }
   }

@@ -1,26 +1,29 @@
 #include "stime_parser.hpp"
-void TDirCrawlMetaData::AdjustDcmd(const TStr & Value, TInt Index, TKeyType KeyType, TDirCrawlMetaData & dcmd, const TSchema* schema) {
-    switch (KeyType) {
-        case NO_ID:
-            return;
-        case TIME:
-            dcmd.ts = schema->ConvertTime(Value);
-            dcmd.TimeSet = true;
-            return;
-        case SENSOR:
-            dcmd.RunningIDVec[Index] = Value;
-            return;
-        case ID:
-            dcmd.RunningIDVec[Index] = Value;
-            return;
-        default:
-            AssertR(false, "Invalid enum type when crawling data file");
+void TDirCrawlMetaData::AdjustDcmd(const TStr &Value, TInt Index, TKeyType KeyType, TDirCrawlMetaData &dcmd, const TSchema *schema)
+{
+    switch (KeyType)
+    {
+    case NO_ID:
+        return;
+    case TIME:
+        dcmd.ts = schema->ConvertTime(Value);
+        dcmd.TimeSet = true;
+        return;
+    case SENSOR:
+        dcmd.RunningIDVec[Index] = Value;
+        return;
+    case ID:
+        dcmd.RunningIDVec[Index] = Value;
+        return;
+    default:
+        AssertR(false, "Invalid enum type when crawling data file");
     }
 }
 
 // read data file as according to schema
 // dcmd passed in was a copy up above, so ok to modify
-void TSTimeParser::ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd) {
+void TSTimeParser::ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd)
+{
     std::ifstream infile(FileName.CStr());
     AssertR(infile.is_open(), "could not open eventfile");
     std::cout << "reading file " << FileName.CStr() << std::endl;
@@ -33,15 +36,20 @@ void TSTimeParser::ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd) {
     // Have a vector of key ids for current unsorted data lists
     TVec<int> SensorKeyIds(Schema->SensorNames.Len());
 
-    while(std::getline(infile, line)) {
+    while (std::getline(infile, line))
+    {
         line_no++;
         TVec<TStr> row = TCSVParse::readCSVLine(line, Schema->FileDelimiter);
-        if (CurrNumRecords % 100000 == 0) std::cout << "lines read " << CurrNumRecords << " by " << " in " << FileName.CStr() << std::endl;
-        TVec<TPair<TStr, TInt> > SensorValues; // {Value, Sensor Index}
+        if (CurrNumRecords % 100000 == 0)
+            std::cout << "lines read " << CurrNumRecords << " by "
+                      << " in " << FileName.CStr() << std::endl;
+        TVec<TPair<TStr, TInt>> SensorValues; // {Value, Sensor Index}
 
         // read all the data in this row
-        for (int i=0; i<Schema->Cols.Len(); i++) {
-            if (Schema->Cols[i].Val1 == SENSOR) { // if sensor add to SensorValues and move on
+        for (int i = 0; i < Schema->Cols.Len(); i++)
+        {
+            if (Schema->Cols[i].Val1 == SENSOR)
+            { // if sensor add to SensorValues and move on
                 SensorValues.Add({row[i], Schema->Cols[i].Val2});
                 continue;
             }
@@ -49,41 +57,48 @@ void TSTimeParser::ReadEventDataFile(TStr FileName, TDirCrawlMetaData dcmd) {
         }
 
         // set or update the running id list
-        TDirCrawlMetaData::AdjustDcmd(TStr("PlACE_HOLDER"), Schema->KeyNames.Len()-1, SENSOR, dcmd, Schema); // set to placeholder
-        if (CurrIds != dcmd.RunningIDVec) {
+        TDirCrawlMetaData::AdjustDcmd(TStr("PlACE_HOLDER"), Schema->KeyNames.Len() - 1, SENSOR, dcmd, Schema); // set to placeholder
+        if (CurrIds != dcmd.RunningIDVec)
+        {
             // new ID vec, so update pointers
             CurrIds = dcmd.RunningIDVec;
-            for (int i=0; i<Schema->SensorNames.Len(); i++) {
-                TDirCrawlMetaData::AdjustDcmd(Schema->SensorNames[SensorValues[i].Val2], Schema->KeyNames.Len()-1, SENSOR, dcmd, Schema);
-                if (!RawTimeData.IsKey(dcmd.RunningIDVec)) {
+            for (int i = 0; i < Schema->SensorNames.Len(); i++)
+            {
+                TDirCrawlMetaData::AdjustDcmd(Schema->SensorNames[SensorValues[i].Val2], Schema->KeyNames.Len() - 1, SENSOR, dcmd, Schema);
+                if (!RawTimeData.IsKey(dcmd.RunningIDVec))
+                {
                     RawTimeData.AddDat(dcmd.RunningIDVec, TUnsortedTime(dcmd.RunningIDVec));
                 }
                 SensorKeyIds[i] = RawTimeData.GetKeyId(dcmd.RunningIDVec);
-           }
+            }
         }
 
         // Update parser with this data
-        for (int i=0; i<SensorValues.Len(); i++) {
+        for (int i = 0; i < SensorValues.Len(); i++)
+        {
             RawTimeData[SensorKeyIds[i]].TimeData.Add({dcmd.ts, SensorValues[i].Val1});
             CurrNumRecords++;
         }
-    	if (CurrNumRecords >= MaxRecordCapacity) {
+        if (CurrNumRecords >= MaxRecordCapacity)
+        {
             FlushUnsortedData();
             CurrIds.Clr();
         }
     }
 }
 
-
 //Create primary directory structure including indiv folder. return full directory path
-TStr TSTimeParser::CreatePrimDirs(TStrV & IdVec) {
+TStr TSTimeParser::CreatePrimDirs(TStrV &IdVec)
+{
     //get the directory names based on hash
     TStrV dirNames;
     GetPrimDirNames(IdVec, dirNames);
     TStr dir = OutputDirectory;
-    for (int i=0; i<dirNames.Len(); i++) {
+    for (int i = 0; i < dirNames.Len(); i++)
+    {
         dir += TStr("/") + dirNames[i];
-        if (!TDir::Exists(dir)) {
+        if (!TDir::Exists(dir))
+        {
             AssertR(TDir::GenDir(dir), "Could not create directory");
         }
     }
@@ -91,28 +106,32 @@ TStr TSTimeParser::CreatePrimDirs(TStrV & IdVec) {
 }
 
 // return a vector of the primary directory names for this idvec (including indiv folder)
-void TSTimeParser::GetPrimDirNames(const TStrV & IdVec, TStrV& result) {
+void TSTimeParser::GetPrimDirNames(const TStrV &IdVec, TStrV &result)
+{
     int primHash = IdVec.GetPrimHashCd();
-    for (int i=0; i<ModHierarchy.Len(); i++) {
+    for (int i = 0; i < ModHierarchy.Len(); i++)
+    {
         int rem = primHash % ModHierarchy[i];
         result.Add(TInt(rem).GetStr());
     }
     result.Add(TCSVParse::CreateIDVFileName(IdVec));
 }
 
-void TSTimeParser::FlushUnsortedData() {
+void TSTimeParser::FlushUnsortedData()
+{
     mtx->lock();
     // lock filesystem (no concurrent access)
-    std::cout<< "Flushing data"<<std::endl;
+    std::cout << "Flushing data" << std::endl;
     time_t t = std::time(0);
-    TUInt64 now = static_cast<uint64> (t);
-    THash<TStrV, TUnsortedTime >::TIter it;
-    for (it = RawTimeData.BegI(); it != RawTimeData.EndI(); it++) {
-        TUnsortedTime & time_record = it.GetDat();
+    TUInt64 now = static_cast<uint64>(t);
+    THash<TStrV, TUnsortedTime>::TIter it;
+    for (it = RawTimeData.BegI(); it != RawTimeData.EndI(); it++)
+    {
+        TUnsortedTime &time_record = it.GetDat();
         // create primary structure as necessary
         TStr dir_prefix = CreatePrimDirs(time_record.KeyIds);
         TStr fn = dir_prefix + TStr('/') + now.GetStr() + TStr(".bin");
-        std::cout<<"flushing at " << fn.CStr() << std::endl;
+        std::cout << "flushing at " << fn.CStr() << std::endl;
         TFOut outstream(fn);
         time_record.Save(outstream);
     }
@@ -120,6 +139,5 @@ void TSTimeParser::FlushUnsortedData() {
     std::cout << "about to unlock" << std::endl;
     mtx->unlock();
     RawTimeData.Clr();
-    std::cout<< "done flushing" << std::endl;
+    std::cout << "done flushing" << std::endl;
 }
-

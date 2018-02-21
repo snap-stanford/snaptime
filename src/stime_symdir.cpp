@@ -115,7 +115,6 @@ void TSTimeSymDir::QueryFileSys(TVec<FileQuery> &Query, TTimeCollection &r,
     }
 
     QueryCollector qCollector(Query, &Schema);
-    std::cout << "constructed collector" << std::endl;
     // retrieve the data and put into an executable
     UnravelQuery(SymDirQueries, 0, OutputDir, QueryMap, qCollector,
                  InitialTimeStamp, FinalTimeStamp);

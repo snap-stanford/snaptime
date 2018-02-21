@@ -4,18 +4,18 @@
 
 class TTimeFFile
 {
-public:
-  static void GetAllFiles(TStr &Path, TStrV &FnV, bool OnlyDirs = false);
-  static TStr GetLocalFileName(TStr &DirName);
-  static TStr EscapeFileName(TStr &FileName);
+  public:
+    static void GetAllFiles(TStr &Path, TStrV &FnV, bool OnlyDirs = false);
+    static TStr GetLocalFileName(TStr &DirName);
+    static TStr EscapeFileName(TStr &FileName);
 };
 
 class TCSVParse
 {
-public:
-  static TVec<TStr> readCSVLine(std::string line, char delim = ',', bool TrimWs = true);
-  static std::string trim(std::string str);
-  static TStr CreateIDVFileName(const TStrV &IdVec);
+  public:
+    static TVec<TStr> readCSVLine(std::string line, char delim = ',', bool TrimWs = true);
+    static std::string trim(std::string str);
+    static TStr CreateIDVFileName(const TStrV &IdVec);
 };
 
 #endif

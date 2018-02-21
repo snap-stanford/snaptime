@@ -4,5 +4,5 @@
 class TSTimeSorter
 {
   public:
-	static void SortBucketedDataDir(TStr DirPath, bool ClearData, TSchema *schema_p);
+    static void SortBucketedDataDir(TStr DirPath, bool ClearData, TSchema *schema_p);
 };

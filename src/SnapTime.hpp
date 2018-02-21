@@ -20,20 +20,20 @@
 
 struct SnapTimeConfiguration
 {
-	std::string InputRawDirectory;			// The raw input directory
-	std::string PrimaryDirectory;			// The directory where we place primary raw processed files
-	std::string SymbolicDirectory;			// The directory where we place the symbolic query overlay
-	std::string SchemaFile;					// The location of the schema file
-	std::vector<int> ModHierarchy;			// The number of folders in each level of the Primary Directory
-	std::vector<std::string> SymbolicSplit; // The KeyNames over which we divide out the symbolic overlay
-	int NumThreads;							//number of threads used for parsing
+    std::string InputRawDirectory;          // The raw input directory
+    std::string PrimaryDirectory;           // The directory where we place primary raw processed files
+    std::string SymbolicDirectory;          // The directory where we place the symbolic query overlay
+    std::string SchemaFile;                 // The location of the schema file
+    std::vector<int> ModHierarchy;          // The number of folders in each level of the Primary Directory
+    std::vector<std::string> SymbolicSplit; // The KeyNames over which we divide out the symbolic overlay
+    int NumThreads;                         //number of threads used for parsing
 };
 
 struct QueryObject
 {
-	std::vector<std::pair<std::string, std::vector<std::string>>> Queries; //IDName {ValueName}
-	std::string InitialTimestamp;										   // in same format as the schema, "" to ignore
-	std::string FinalTimestamp;											   // in same format as schema, "" to ignore
+    std::vector<std::pair<std::string, std::vector<std::string>>> Queries; //IDName {ValueName}
+    std::string InitialTimestamp;                                          // in same format as the schema, "" to ignore
+    std::string FinalTimestamp;                                            // in same format as schema, "" to ignore
 };
 
 // Walk through the raw input directory to create the primary directory structure
@@ -49,8 +49,9 @@ TTimeCollection Query(SnapTimeConfiguration config, QueryObject &Query, std::str
 TTimeCollection LoadQuery(std::string InputFile);
 
 // Inflate a query into a double vector of doubles
-std::vector<std::vector<double>> InflateQuery(SnapTimeConfiguration config, TTimeCollection r,
-											  std::string initTS, double duration, double granularity);
+std::vector<std::vector<double>> InflateQuery(SnapTimeConfiguration config,
+                                              TTimeCollection r, std::string initTS,
+                                              double duration, double granularity);
 
 // Perform Summary stats
 void PerformSummaryStats(SnapTimeConfiguration config, std::string output_file);

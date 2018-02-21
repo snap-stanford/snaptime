@@ -43,7 +43,7 @@ void GeneratePrimaryDirectories(SnapTimeConfiguration config);
 void GenerateSymbolicIndex(SnapTimeConfiguration config);
 
 // Query an object using the above QueryObject specifications, optionally saving the query into an outputfile
-TTimeCollection Query(SnapTimeConfiguration config, QueryObject &Query, std::string OutputFile); // "" if do not want to save
+TTimeCollection Query(SnapTimeConfiguration config, QueryObject &Query, std::string OutputFile, bool ZeroFlag); // "" if do not want to save
 
 // Load a previously saved query
 TTimeCollection LoadQuery(std::string InputFile);

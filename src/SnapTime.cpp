@@ -34,7 +34,7 @@ void GenerateSymbolicIndex(SnapTimeConfiguration config)
     SymDirMaker.CreateSymbolicDirs();
 }
 
-TTimeCollection Query(SnapTimeConfiguration config, QueryObject &Query, std::string OutputFile)
+TTimeCollection Query(SnapTimeConfiguration config, QueryObject &Query, std::string OutputFile, bool ZeroFlag)
 {
     TTimeCollection r;
     TStrV QuerySplit;
@@ -58,8 +58,9 @@ TTimeCollection Query(SnapTimeConfiguration config, QueryObject &Query, std::str
     }
     TStr initTS(Query.InitialTimestamp.c_str());
     TStr finTS(Query.FinalTimestamp.c_str());
+    std::cout << "about to query filesys" << std::endl;
     SymDirMaker.QueryFileSys(FileQueries, r, initTS,
-                             finTS, TStr(OutputFile.c_str()));
+                             finTS, TStr(OutputFile.c_str()), ZeroFlag);
     return r;
 }
 

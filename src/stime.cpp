@@ -1,5 +1,12 @@
 #include "stime.hpp"
 
+void TSTime::DebugPrint() {
+	for (int i=0; i<KeyIds.Len(); i++) {
+             std::cout << KeyIds[i].CStr() << ",";
+        }
+        std::cout << Len() << std::endl;
+}
+
 TPt<TSTime> TSTime::TypedTimeGenerator(TType type, TStrV &key_ids)
 {
     switch (type)

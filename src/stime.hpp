@@ -84,6 +84,8 @@ class TSTime
     TFlt GetFloat(int i);
     TInt64 GetInt(int i);
     TStr GetStr(int i);
+
+    void DebugPrint();
 };
 
 // TSTypedType is a per type implementation of TSTime

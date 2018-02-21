@@ -115,6 +115,7 @@ void TSTimeSymDir::QueryFileSys(TVec<FileQuery> &Query, TTimeCollection &r,
     }
 
     QueryCollector qCollector(Query, &Schema);
+    std::cout << "constructed collector" << std::endl;
     // retrieve the data and put into an executable
     UnravelQuery(SymDirQueries, 0, OutputDir, QueryMap, qCollector,
                  InitialTimeStamp, FinalTimeStamp);
@@ -338,6 +339,7 @@ void SummaryStats(TStr &RawDir, TStr &SchemaFile, TStr &OutputFile)
  */
 QueryCollector::QueryCollector(TVec<FileQuery> Query, TSchema *_schema) : QueryCompute(Query.Len()), QueryGrid()
 {
+    std::cout << "creating collector " << std::endl;
     schema = _schema;
     // Create indexer
     TInt currDepth = 1;
@@ -348,12 +350,12 @@ QueryCollector::QueryCollector(TVec<FileQuery> Query, TSchema *_schema) : QueryC
         AssertR(schema->KeyNamesToIndex.IsKeyGetDat(fq.QueryName, index),
                 "Query contains QueryName not in Schema");
         THash<TStr, TInt> innerHash;
-        for (int j = 0; j < fq.QueryVal[j].Len(); j++)
+        for (int j = 0; j < fq.QueryVal.Len(); j++)
         {
             innerHash.AddDat(fq.QueryVal[j], j); // Map QueryValue into index
         }
         QueryCompute[i] = {index, innerHash, fq.QueryVal, currDepth};
-        currDepth *= fq.QueryVal.Len();
+        currDepth = currDepth * fq.QueryVal.Len();
     }
     QueryGrid.Gen(currDepth); // create a vector with maximum depth
 }
@@ -384,7 +386,7 @@ TPt<TSTime> QueryCollector::ConstructEmptyTSTime(TInt index)
         DummyKeyIds[qi.QueryNameIndex] = qi.QueryVals[keyIndex]; // fill in the dummy index
     }
     TType t = schema->GetType(DummyKeyIds);
-    return TSTime.TypedTimeGenerator(t, DummyKeyIds);
+    return TSTime::TypedTimeGenerator(t, DummyKeyIds);
 }
 
 void QueryCollector::AddSTimeToCollector(TPt<TSTime> elem)

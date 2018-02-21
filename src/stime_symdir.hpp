@@ -31,9 +31,9 @@ struct QueryIndexer
 
 class QueryCollector
 {
-  private:
-    TVec<TVec << TPt<TSTime>>> QueryGrid;
+  public:
     TVec<QueryIndexer> QueryCompute;
+    TVec< TVec < TPt<TSTime> > > QueryGrid;
     TSchema *schema;
 
   public:
@@ -76,8 +76,8 @@ class TSTimeSymDir
     static void LoadQuerySet(TTimeCollection &r, TSIn &SIn);
 
   public:
-    void QueryFileSys(TVec<FileQuery> Query, TTimeCollection &r,
-                      TStr &InitialTimeStamp, TStr &FinalTimeStamp, TStr OutputDir);
+    void QueryFileSys(TVec<FileQuery> & Query, TTimeCollection &r,
+                      TStr &InitialTimeStamp, TStr &FinalTimeStamp, TStr OutputDir, bool ZeroFlag);
     void InflateData(TTimeCollection &r, TStr initialTimestamp, double duration,
                      double granularity, std::vector<std::vector<double>> &result);
 

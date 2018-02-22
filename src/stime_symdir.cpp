@@ -118,6 +118,7 @@ void TSTimeSymDir::QueryFileSys(TVec<FileQuery> &Query, TTimeCollection &r,
     // retrieve the data and put into an executable
     UnravelQuery(SymDirQueries, 0, OutputDir, QueryMap, qCollector,
                  InitialTimeStamp, FinalTimeStamp);
+    std::cout << "fully unravelled query" << std::endl;
     qCollector.ConvertToTimeCollection(r, zeroFlag);
     if (OutputDir.Len() != 0)
     {
@@ -380,7 +381,7 @@ TPt<TSTime> QueryCollector::ConstructEmptyTSTime(TInt index)
     for (int i = 0; i < QueryCompute.Len(); i++)
     {
         QueryIndexer &qi = QueryCompute[i];
-        int keyIndex = index % qi.Depth; // this is the QueryVal index that this was supposed to correspond to
+        int keyIndex = index / qi.Depth; // this is the QueryVal index that this was supposed to correspond to
         index = index - keyIndex * qi.Depth;
         DummyKeyIds[qi.QueryNameIndex] = qi.QueryVals[keyIndex]; // fill in the dummy index
     }

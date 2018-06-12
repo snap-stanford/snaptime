@@ -5,39 +5,41 @@ I. Configuration Objects:
 SnapTime Configuration is an object that configures the names and parameters
 for pre-processing the raw directory. Below is the C++ struct:
 
-struct SnapTimeConfiguration {
-	// InputRawDirectory is the path to the raw data directory
-	std::string InputRawDirectory;
-
-	// PrimaryDirectory is the path to where we place initial Snap binary files
-	std::string PrimaryDirectory;
-
-	// SymbolicDirectory: directory for a secondary hierarchy of symbolic links
-	std::string SymbolicDirectory;
-
-	// The location of the schema file
-	std::string SchemaFile;
-
-	// Each integer in ModHierarchy represents the number of folders in each
+struct SnapTimeConfiguration
+{
+    // InputRawDirectory is the path to the raw data directory
+    std::string InputRawDirectory;
+    
+    // PrimaryDirectory is the path to where we place initial Snap binary files.
+    std::string PrimaryDirectory;
+    
+    // SymbolicDirectory: directory for a secondary hierarchy of symbolic links
+    std::string SymbolicDirectory;
+    
+    // The location of the schema file
+    std::string SchemaFile;
+    
+    // Each integer in ModHierarchy represents the number of folders in each
 	// level of the PrimaryDirectory. This configuration will change based
 	// on how much data you have, but typically you might start with 2 levels of
-	// 10 folders each (so pass in {10,10})
-	std::vector<int> ModHierarchy;
+	// an order of 10 folders each (so pass in {7,9} for example)
+    std::vector<int> ModHierarchy;
 
-	// The KeyNames over which we divide out the symbolic overlay. Use KeyNames
+    // The KeyNames over which we divide out the symbolic overlay. Use KeyNames
 	// which you will frequently query over.
-	std::vector<std::string> SymbolicSplit;
-
-	// Number of threads that the parser will use in its threadpool
-	int NumThreads;
+    std::vector<std::string> SymbolicSplit;
+    
+    // Number of threads used for parsing
+    int NumThreads;
 };
+
 
 QueryObject specifies the parameters for a single query of the above pre-processed
 filesystem.
 struct QueryObject {
-	// A list of {KeyName, Key Value} to query by. For example, if you wanted
-	// results from MachineID A, you would include {MachineID, A} in the vector
-	std::vector<std::pair<std::string, std::string> > Queries;
+	// A list of {KeyName, {Key Values} } to query by. For example, if you wanted
+	// results from MachineID A and B, you would include {MachineID, {A, B}} in the vector
+	std::vector<std::pair<std::string, std::vector<std::string>>> Queries;
 
 	// The initial timestamp in the same string format as specified in the schema
 	// "" to ignore
@@ -49,45 +51,40 @@ struct QueryObject {
 };
 
 Python: The STL interfaces are included in in the SWIG interface, so configuration
-objects have corresponding types in python.
+objects have corresponding types in python. Please see the example.py for an example script in python
 
 II. Methods
 **Caveat** PrimaryDirectory and SymbolicDirectory should not exist prior to running
 GeneratePrimaryDirectories and GenerateSymbolicIndex
 
+// Walk through the raw input directory to create the primary directory structure
 void GeneratePrimaryDirectories(SnapTimeConfiguration config);
-	- Parse the raw input directory into a primary directory
 
+// Create the symbolic overlay after generating the primary directories
 void GenerateSymbolicIndex(SnapTimeConfiguration config);
-	- Create the symbolic index over the primary directory created in 
-	- GeneratePrimaryDirectories
 
-TTimeCollection Query(SnapTimeConfiguration config, QueryObject & Query, std::string OutputFile);
-	- Query an object using the above QueryObject specifications,
-	- optionally saving the query into an output file
-	- Returns a TTimeCollection object (see below)
+// Query an object using the above QueryObject specifications, optionally saving the query into an outputfile
+// If output file is "", do not save
+// If ZeroFlag, then fill in zeros for query instances that do not exist but were queried for
+TTimeCollection Query(SnapTimeConfiguration config, QueryObject &Query, std::string OutputFile, bool ZeroFlag);
 
+// Load a previously saved query
 TTimeCollection LoadQuery(std::string InputFile);
-	- Load a previously saved query
 
-// Inflate a query into a double vector of doubles
-std::vector<std::vector<double> > InflateQuery(SnapTimeConfiguration config, TTimeCollection r, std::string initTS, int duration, int granularity);
-	- Inflate a query result into a synchrounous 2d vector of doubles.
-	- initTS is the timestamp to start at (formatted in the same string
-	- format as specified in the schema).
-	- duration and granularity are in terms of seconds
-	- will throw an error if you try to inflate a string into a double
+// Inflate a query into a double vector of doubles.
+// The unit of granularity and duration is typically seconds, but depends on your time formatter.
+std::vector<std::vector<double>> InflateQuery(SnapTimeConfiguration config,
+                                              TTimeCollection r, std::string initTS,
+                                              double duration, double granularity);
+// Perform Summary stats and save to output file
+void PerformSummaryStats(SnapTimeConfiguration config, std::string output_file);
 
-TTimeCollection has the following methods:
-	int Len();
-		- returns the number of individual time lists in the collection
-	int GetSTimeLen(int rowNum);
-		- returns the number of elements in the rowNum time list
-    TBool GetBool(int rowNum, int elemNum)
-    	- For the rowNum time list, return the element at elemNum as a bool
-	TFlt GetFloat(int rowNum, int elemNum)
-		- For the rowNum time list, return the element at elemNum as a float
-	TInt GetInt(int rowNum, int elemNum)
-		- For the rowNum time list, return the element at elemNum as a int
-	TStr GetStr(int rowNum, int elemNum)
-		- For the rowNum time list, return the element at elemNum as a string
+TTimeCollection is the result of a query, and has a row per complete identification (all identifiers except for the times). It has the following methods:
+    TStrV GetIds(int rowNum) // Get the identifiers for the given row
+    TType GetType(int rowNum) // Get the type of the given row
+    TTime GetTime(int rowNum, int elemNum) // Get the time (as a number, for a given index in a given row)
+    TBool GetBool(int rowNum, int elemNum) // Get the element as a boolean for a given index in a given row
+    TFlt GetFloat(int rowNum, int elemNum) // Get the element as a float for a given index in a given row
+    TInt64 GetInt(int rowNum, int elemNum) // Get the element as a integer for a given index in a given row
+    TStr GetStr(int rowNum, int elemNum) // Get the element as a string for a given index in a given row
+    int GetSTimeLen(int rowNum) // Get the length of a given row

@@ -75,5 +75,30 @@ Structure:
 	<Format String>
 	END TimeConvert
 Notes:
-	FormatString is the string used to convert the time into a long long. 
-	For example: %d.%m.%Y %H:%M:%S
+	FormatString is the string used to convert the time into a double. The %f is mandatory
+	For example: %Y-%m-%d %H:%M:%S.%f
+----------------
+Example Schema:
+Suppose we had a directory structure where each sensor had it's own file (the sensor name is the file's name). Each file has three columns: ID, Time, SensorValue. Suppose we had two sensor values that are integers (IntegerSensor1 and IntegerSensor2), and the rest are booleans. Then our schema might look like
+
+START FileHierarchy
+DELIM:	
+NULL, SensorName
+END
+
+START Schema
+IDValue, ID
+DateTime, TIME
+Value, SENSOR
+END
+
+START SchemaTypes
+DEFAULT, BOOLEAN
+IntegerSensor1, SensorName, INTEGER 
+IntegerSensor2, SensorName, INTEGER 
+END
+
+START TimeConvert
+%Y-%m-%d %H:%M:%S.%f
+END
+

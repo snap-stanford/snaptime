@@ -1,5 +1,8 @@
 snaptime
 ============
+SnapTime is a generalizable pipeline for processing and querying asynchronous extremely large time-stamped datasets in parallel.SnapTime accepts a customizable schema for the file and directory structure. It then creates a compressed directory structure that allowed us to quickly query for records (based on attributes) without loading the whole time series into memory. Finally, SnapTime has a query module that can slice the data and fill it if it’s asynchronous. 
+
+
 ## INSTALLATION
 To install SnapTime
 In the same directory:
